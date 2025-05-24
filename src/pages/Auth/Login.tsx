@@ -17,11 +17,11 @@ function Login() {
     const containerRef = useRef<HTMLDivElement>(null);
     const { refreshUser } = useContext(UserContext) || {};
 
-   /* useEffect(() => {
+    useEffect(() => {
         if (tokens.accessToken) {
             navigate('/');
         }
-    }, [tokens, navigate]);*/
+    }, [tokens, navigate]);
 
     const {
         register,

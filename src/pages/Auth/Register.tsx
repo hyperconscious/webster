@@ -10,8 +10,6 @@ import { ArrowRight, Mail, User, Lock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ReactSelect, { type SingleValue } from 'react-select';
 import { type Theme } from '../../types';
-
-import { useTranslation } from 'react-i18next';
 import { GoogleAuthButton } from "../../components/GoogleAuthButton.tsx";
 
 interface Country {
@@ -21,10 +19,9 @@ interface Country {
 }
 
 function Register() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const [countries, setCountries] = useState<Country[]>([]);
     const [theme, setTheme] = useState<Theme>('light');
-    const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -61,12 +58,11 @@ function Register() {
     });
 
     const onSubmit: SubmitHandler<RegisterData> = async (data) => {
-        console.log(data);
-        const registeredId = notifyLoading(t('register.loading'));
+        const registeredId = notifyLoading("Registering...");
         try {
             await AuthService.register(data);
             notifyDismiss(registeredId);
-            notifySuccess(t('register.success'));
+            notifySuccess("Registration successful! Please check your email for verification.");
             await AuthService.sendVerificationEmail(data.email);
             navigate('/auth');
         } catch (error) {
@@ -75,7 +71,7 @@ function Register() {
                 if (error.response?.data?.message) {
                     notifyError(error.response.data.message);
                 } else {
-                    notifyError(t('errors.unexpectedError'));
+                    notifyError("An unexpected error occurred. Please try again.");
                 }
             }
         }
@@ -84,7 +80,7 @@ function Register() {
     const getThemeClasses = () => {
         switch (theme) {
             case 'light':
-                return 'bg-gray-100 text-gray-900';
+                return 'bg-white-100 text-gray-900';
             case 'blue':
                 return 'bg-blue-950 text-white';
             default:
@@ -99,57 +95,57 @@ function Register() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-x-1 grid grid-cols-1 md:grid-cols-2 gap-2" noValidate>
                 <div>
                     <InputField
-                        label={t('register.login')}
+                        label="Login"
                         type="text"
                         register={register('login')}
                         icon={<User />}
-                        placeholder={t('register.loginPlaceholder')}
+                        placeholder="Enter your login"
                         error={errors.login?.message}
                     />
                 </div>
                 <div>
                     <InputField
-                        label={t('register.fullName')}
+                        label="Full Name"
                         type="text"
                         register={register('full_name')}
                         icon={<User />}
-                        placeholder={t('register.fullNamePlaceholder')}
+                        placeholder="Enter your full name"
                         error={errors.full_name?.message}
                     />
                 </div>
                 <div className="col-span-2">
                     <InputField
-                        label={t('register.email')}
+                        label="Email"
                         type="email"
                         register={register('email')}
                         icon={<Mail />}
-                        placeholder={t('register.emailPlaceholder')}
+                        placeholder="Enter your email"
                         error={errors.email?.message}
                     />
                 </div>
                 <div>
                     <InputField
-                        label={t('register.password')}
+                        label="Password"
                         type="password"
                         register={register('password')}
                         icon={<Lock />}
-                        placeholder={t('register.passwordPlaceholder')}
+                        placeholder="Create a password"
                         error={errors.password?.message}
                     />
                 </div>
                 <div>
                     <InputField
-                        label={t('register.passwordConfirmation')}
+                        label="Confirm Password"
                         type="password"
                         register={register('passwordConfirmation')}
                         icon={<Lock />}
-                        placeholder={t('register.passwordConfirmationPlaceholder')}
+                        placeholder="Confirm your password"
                         error={errors.passwordConfirmation?.message}
                     />
                 </div>
                 <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                        {t('register.country')}
+                        Country
                     </label>
                     <Controller
                         name="countryCode"
@@ -162,25 +158,25 @@ function Register() {
                                 styles={{
                                     control: (baseStyles) => ({
                                         ...baseStyles,
-                                        backgroundColor: theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e3a8a' : '#ffffff', // Dark: #2d3748, Blue: #1e3a8a, Light: #ffffff
-                                        borderColor: theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#1e40af' : '#e2e8f0', // Dark: #4a5568, Blue: #1e40af, Light: #e2e8f0
-                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000', // Text color
+                                        backgroundColor: theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e3a8a' : '#ffffff',
+                                        borderColor: theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#1e40af' : '#e2e8f0',
+                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000',
                                         borderRadius: '8px',
                                         boxShadow: theme === 'dark' ? '0 2px 4px rgba(255, 255, 255, 0.1)' : theme === 'blue' ? '0 2px 4px rgba(30, 58, 138, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.1)',
                                     }),
                                     option: (baseStyles, state) => ({
                                         ...baseStyles,
                                         backgroundColor: state.isSelected
-                                            ? (theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#2563eb' : '#3182ce') // Selected: Dark: #4a5568, Blue: #2563eb, Light: #3182ce
+                                            ? (theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#2563eb' : '#3182ce')
                                             : state.isFocused
-                                                ? (theme === 'dark' ? 'black' : theme === 'blue' ? '#1e3a8a' : 'white') // Focused: Dark: black, Blue: #1e3a8a, Light: white
-                                                : (theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e40af' : '#edf2f7'), // Default: Dark: #2d3748, Blue: #1e40af, Light: #edf2f7
-                                        color: state.isSelected ? '#ffffff' : (theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000'), // Text color
+                                                ? (theme === 'dark' ? 'black' : theme === 'blue' ? '#1e3a8a' : 'white')
+                                                : (theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e40af' : '#edf2f7'),
+                                        color: state.isSelected ? '#ffffff' : (theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000'),
                                         cursor: 'pointer',
                                     }),
                                     singleValue: (baseStyles) => ({
                                         ...baseStyles,
-                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000', // Text color for the selected value
+                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000',
                                     }),
                                 }}
                                 classNamePrefix="react-select"
@@ -205,14 +201,14 @@ function Register() {
                         type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2"
                     >
-                        <span>{t('register.button')}</span>
+                        <span>Create account</span>
                         <ArrowRight className="w-5 h-5" />
                     </button>
                 </div>
                 <GoogleAuthButton
                     containerRef={containerRef}
-                    loadingMessage={t('register.loading')}
-                    successMessage={t('register.googleSuccess')}
+                    loadingMessage="Registering..."
+                    successMessage="Registration successful!"
                 />
             </form>
         </div>

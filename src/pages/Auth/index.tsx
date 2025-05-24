@@ -13,12 +13,12 @@ function Authentication() {
     const navigate = useNavigate();
     const [tokens] = useState(AuthStore.getTokens());
 
- /*   useEffect(() => {
+    useEffect(() => {
         console.log('Tokens:', tokens);
         if (tokens.accessToken) {
             navigate('/');
         }
-    }, [tokens, navigate]);*/
+    }, [tokens, navigate]);
 
     const renderForm = () => {
         switch (formType) {
