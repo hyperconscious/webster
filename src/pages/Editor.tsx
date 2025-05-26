@@ -41,7 +41,8 @@ const Editor = () => {
         setColor,
         setLineWidth,
         setTool,
-        setBrushPattern
+        setBrushPattern,
+        setOpacityBrush
     } = useCanvas({
         canvasWidth,
         canvasHeight,
@@ -97,7 +98,7 @@ const Editor = () => {
             <div className="flex flex-1 overflow-hidden">
                 <div
                     className={`${showLeftSidebar ? 'w-72' : 'w-0'
-                        } transition-all duration-300 overflow-hidden flex flex-col border-r ${theme === 'light' ? 'border-gray-200' : 'border-gray-800'
+                        } transition-all duration-300 overflow-hidden flex flex-col border-r ${theme === 'light' ? 'border-gray-400' : theme === 'blue' ? 'bg-blue-900/95 border-gray-800' : ' border-gray-800'
                         }`}
                 >
                     <div className="p-4 flex flex-col gap-4">
@@ -111,7 +112,7 @@ const Editor = () => {
                                             key={shape}
                                             onClick={() => setTool('shapes')}
                                             className={`p-3 rounded-lg transition-colors ${theme === 'light'
-                                                ? 'bg-white hover:bg-gray-50 border border-gray-200'
+                                                ? 'bg-white hover:bg-gray-200 border border-gray-300'
                                                 : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'
                                                 }`}
                                         >
@@ -143,13 +144,13 @@ const Editor = () => {
                                             type="range"
                                             min="0"
                                             max="100"
-                                            value={100}
-                                            onChange={(e) => { }}
+                                            value={settings.opacity}
+                                            onChange={(e) => {setOpacityBrush(Number(e.target.value))}}
                                             className="w-full"
                                         />
-                                        <div className="text-sm mt-1">100%</div>
+                                        <div className="text-sm mt-1">{settings.opacity}</div>
                                     </div>
-                                    <div>
+                                    { settings.tool === "brush" && <div>
                                         <label className="text-sm mb-1 block">Pattern</label>
                                         <select
                                             value={settings.pattern}
@@ -165,9 +166,10 @@ const Editor = () => {
                                             <option value="calligraphy">Calligraphy</option>
                                             <option value="spray">Spray</option>
                                             <option value="square">Square</option>
+                                            <option value="polygon">Polygon</option>
                                             <option value="textured">Textured</option>
                                         </select>
-                                    </div>
+                                    </div>}
                                     <div>
                                         <label className="text-sm mb-1 block">Color</label>
                                         <ColorPicker
@@ -187,6 +189,7 @@ const Editor = () => {
                         width={canvasWidth}
                         height={canvasHeight}
                         layers={layers}
+                        activeLayer={activeLayer}
                         startDrawing={startDrawing}
                         draw={draw}
                         stopDrawing={stopDrawing}

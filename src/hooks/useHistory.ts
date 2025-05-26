@@ -7,16 +7,10 @@ export const useHistory = (initialLayers: Layer[]) => {
 
     const createHistorySnapshot = useCallback((layers: Layer[]) => {
         const clonedLayers = layers.map(layer => {
-            const newCanvas = document.createElement('canvas');
-            newCanvas.width = layer.canvas.width;
-            newCanvas.height = layer.canvas.height;
-            const context = newCanvas.getContext('2d');
-            if (context) {
-                context.drawImage(layer.canvas, 0, 0);
-            }
+            const serilizedLayer = layer.canvas.toJSON();
             return {
                 ...layer,
-                canvas: newCanvas
+                canvasJSON: serilizedLayer
             };
         });
 

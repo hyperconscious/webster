@@ -15,12 +15,15 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ currentColor, onColorChange, 
 
     const handleColorChange = (color: string) => {
         onColorChange(color);
+        setShowPicker(prev => !prev);
 
         if (!recentColors.includes(color)) {
             setRecentColors(prev => {
-                const newColors = [color, ...prev];
+                let newColors = [color, ...prev];
                 if (newColors.length > 8)
-                    newColors.slice(0, 8);
+                    console.log(newColors);
+                    newColors = newColors.slice(0, 8);
+                
                 return newColors;
             });
         }

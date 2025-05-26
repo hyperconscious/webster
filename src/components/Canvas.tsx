@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { Point, Theme } from '../types';
 import { ZoomIn, ZoomOut, MousePointer } from 'lucide-react';
+import Konva from 'konva';
+import { Stage } from 'react-konva';
 
 interface CanvasProps {
     width: number;
     height: number;
     layers: any[];
+    activeLayer: any;
     startDrawing: (point: Point) => void;
     draw: (point: Point) => void;
     stopDrawing: () => void;
@@ -17,13 +20,14 @@ const Canvas: React.FC<CanvasProps> = ({
     width,
     height,
     layers,
+    activeLayer,
     startDrawing,
     draw,
     stopDrawing,
     settings,
     theme
 }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const canvasRef = useRef<Konva.Stage>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(1);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -32,27 +36,50 @@ const Canvas: React.FC<CanvasProps> = ({
     const [showZoomControls, setShowZoomControls] = useState(false);
 
     const renderLayers = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        const stage = canvasRef.current;
+        if (!stage) return;
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        const merged = stage.getChildren((node) => { return node.id() === 'merged-layer' || node.id() === 'merged-layer2'; });
+        merged.forEach(layer => layer.destroy());
+        stage.removeChildren();
 
-        ctx.clearRect(0, 0, width, height);
-
-        layers.forEach(layer => {
-            if (layer.visible) {
-                ctx.globalAlpha = layer.opacity;
-                ctx.drawImage(layer.canvas, 0, 0);
+        const mergedLayer = new Konva.Layer({ id: 'merged-layer' });
+        const mergedLayer2 = new Konva.Layer({ id: 'merged-layer2' });
+        
+        const activeLayerIndex = layers.indexOf(activeLayer);
+        layers.slice(activeLayerIndex + 1, layers.length).reverse().forEach(layer => {
+            if (layer.visible && layer.canvas !== activeLayer.canvas) {
+                const groupLayer = new Konva.Group({
+                    opacity: layer.opacity
+                });
+                layer.canvas.getChildren().forEach((child: any) => {
+                    groupLayer.add(child.clone());
+                });
+                mergedLayer.add(groupLayer);
             }
         });
-
-        ctx.globalAlpha = 1;
+        stage.add(mergedLayer);
+        if (activeLayer.visible) {
+            activeLayer.canvas.opacity(activeLayer.opacity);
+            stage.add(activeLayer.canvas);
+        }
+        layers.slice(0, activeLayerIndex).reverse().forEach(layer => {
+            if (layer.visible && layer.canvas !== activeLayer.canvas) {
+                const groupLayer = new Konva.Group({
+                    opacity: layer.opacity
+                });
+                layer.canvas.getChildren().forEach((child: any) => {
+                    groupLayer.add(child.clone());
+                });
+                mergedLayer2.add(groupLayer);
+            }
+        });
+        stage.add(mergedLayer2);
     };
 
     useEffect(() => {
         renderLayers();
-    }, [layers, width, height]);
+    }, [layers, width, height, activeLayer]);
 
     const screenToCanvas = (clientX: number, clientY: number): Point => {
         if (!canvasRef.current || !containerRef.current) return { x: 0, y: 0 };
@@ -64,26 +91,28 @@ const Canvas: React.FC<CanvasProps> = ({
         return { x, y };
     };
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button === 1 || (e.button === 0 && e.altKey)) {
+    const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+        const evt = e.evt;
+        if (evt.button === 1 || (evt.button === 0 && evt.altKey)) {
             setIsDragging(true);
-            setDragStart({ x: e.clientX, y: e.clientY });
-        } else if (e.button === 0) {
-            const point = screenToCanvas(e.clientX, e.clientY);
+            setDragStart({ x: evt.clientX, y: evt.clientY });
+        } else if (evt.button === 0) {
+            const point = screenToCanvas(evt.clientX, evt.clientY);
             startDrawing(point);
             renderLayers();
         }
     };
 
-    const handleMouseMove = (e: React.MouseEvent) => {
+    const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+        const evt = e.evt;
         if (isDragging) {
             setOffset(prev => ({
-                x: prev.x + (e.clientX - dragStart.x),
-                y: prev.y + (e.clientY - dragStart.y)
+                x: prev.x + (evt.clientX - dragStart.x),
+                y: prev.y + (evt.clientY - dragStart.y)
             }));
-            setDragStart({ x: e.clientX, y: e.clientY });
+            setDragStart({ x: evt.clientX, y: evt.clientY });
         } else {
-            const point = screenToCanvas(e.clientX, e.clientY);
+            const point = screenToCanvas(evt.clientX, evt.clientY);
             draw(point);
             renderLayers();
         }
@@ -107,7 +136,7 @@ const Canvas: React.FC<CanvasProps> = ({
     };
 
     const handleWheel = (e: React.WheelEvent) => {
-        e.preventDefault();
+        //e.preventDefault();
 
         const zoomIntensity = 0.1;
         const delta = e.deltaY < 0 ? zoomIntensity : -zoomIntensity;
@@ -148,7 +177,7 @@ const Canvas: React.FC<CanvasProps> = ({
     const getThemeClasses = () => {
         switch (theme) {
             case 'light':
-                return 'bg-gray-100';
+                return 'bg-gray-300';
             case 'blue':
                 return 'bg-blue-950';
             default:
@@ -159,7 +188,7 @@ const Canvas: React.FC<CanvasProps> = ({
     const getControlsThemeClasses = () => {
         switch (theme) {
             case 'light':
-                return 'bg-white text-gray-900 shadow-lg border border-gray-200';
+                return 'bg-white text-gray-900 shadow-lg border border-gray-400';
             case 'blue':
                 return 'bg-blue-900 text-white shadow-blue-900/50 border border-blue-800';
             default:
@@ -183,11 +212,11 @@ const Canvas: React.FC<CanvasProps> = ({
                     height: height
                 }}
             >
-                <canvas
+                <Stage
                     ref={canvasRef}
                     width={width}
                     height={height}
-                    className="absolute top-0 left-0 bg-white shadow-xl rounded-lg"
+                    className={`absolute top-0 left-0 bg-white rounded-lg`}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}

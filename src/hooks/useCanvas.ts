@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import type { DrawingSettings, Point, Layer, Tool, BrushPattern } from '../types';
+import Konva from 'konva';
 
 interface UseCanvasProps {
     canvasWidth: number;
@@ -23,70 +24,57 @@ export const useCanvas = ({
         tool: 'brush',
         pattern: 'normal',
         point: { x: 0, y: 0 },
+        opacity: 100,
     });
-
+    const [currentLine, setCurrentLine] = useState<Konva.Line>();
     const lastPointRef = useRef<Point | null>(null);
-    const startDrawingTimeRef = useRef<number | null>(null);
 
-    const getContext = useCallback((canvas: HTMLCanvasElement) => {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
+    const getLineConfig = useCallback((point: Point) => {
+        const configLine: Konva.LineConfig = {
+            points: [point.x, point.y],
+            stroke: settings.color,
+            strokeWidth: settings.lineWidth,
+            lineCap: 'round',
+            lineJoin: 'round',
+            opacity: settings.opacity / 100,
+            globalCompositeOperation: 'source-over'
+        }
 
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.shadowBlur = 0;
-            ctx.shadowColor = '';
-            ctx.globalAlpha = 1;
-            ctx.setLineDash([]);
+        const { pattern, lineWidth, color } = settings;
 
-            const { pattern, lineWidth, color, point } = settings;
-
+        if (settings.tool === 'eraser') {
+            configLine.globalCompositeOperation = 'destination-out';
+            configLine.stroke = '#FFFFFF';
+            configLine.opacity = 1;
+        } else if (settings.tool === 'highlighter') {
+            configLine.globalCompositeOperation = 'lighter';
+            configLine.opacity = (settings.opacity / 100) * 0.5;
+        }
+        else if (settings.tool === 'brush') {
             switch (pattern) {
                 case 'soft':
-                    ctx.shadowBlur = lineWidth / 2;
-                    ctx.shadowColor = color;
-                    ctx.globalAlpha = 0.9;
+                    configLine.shadowBlur = lineWidth / 2;
+                    configLine.shadowColor = color;
+                    configLine.opacity = (settings.opacity / 100) * 0.9;
                     break;
                 case 'scatter':
-                    ctx.globalAlpha = 0.7;
-                    ctx.setLineDash([lineWidth, lineWidth * 2]);
-                    ctx.lineDashOffset = lineWidth / 1.5;
+                    configLine.opacity = (settings.opacity / 100) * 0.7;
+                    configLine.dash = [lineWidth * 3, lineWidth * 3];
                     break;
                 case 'calligraphy':
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.globalAlpha = 0.98;
+                    configLine.lineCap = 'round';
+                    configLine.lineJoin = 'round';
+                    configLine.opacity = (settings.opacity / 100) * 0.98;
                     break;
-                case 'spray':
-                    ctx.globalAlpha = 0.8;
-                    const density = 50;
-                    const radius = settings.lineWidth * 2;
-
-                    if (lastPointRef.current) {
-                        for (let i = 0; i < density; i++) {
-                            const angle = Math.random() * Math.PI * 2;
-                            const sprayRadius = Math.random() * radius;
-                            const xOffset = Math.cos(angle) * sprayRadius;
-                            const yOffset = Math.sin(angle) * sprayRadius;
-                            const dotSize = Math.random() * (settings.lineWidth / 3);
-
-                            ctx.beginPath();
-                            ctx.arc(
-                                point.x + xOffset,
-                                point.y + yOffset,
-                                dotSize,
-                                0,
-                                Math.PI * 2
-                            );
-                            ctx.fill();
-                        }
-                    }
-                    return null;
                 case 'square':
-                    ctx.lineCap = 'square';
-                    ctx.lineJoin = 'miter'; // test
+                    configLine.lineCap = 'square';
+                    configLine.lineJoin = 'miter'; // test
                     break;
-                case 'textured':
+                case 'polygon':
+                    configLine.fill = color;
+                    configLine.closed = true;
+                    break;
+                /* case 'textured':
                     const img = new Image();
                     img.src = '/textures/rough-paper.jpg';
                     img.onload = () => {
@@ -99,66 +87,92 @@ export const useCanvas = ({
                     img.onerror = (error) => {
                         console.error('Ошибка загрузки изображения:', error);
                     };
-
-                    break;
+    
+                    break; */
                 default:
                     // No additional modifications needed
                     break;
             }
+        } else if (settings.tool === 'pencil') {
+            configLine.lineCap = 'butt';
+            configLine.lineJoin = 'miter';
+            configLine.opacity = (settings.opacity / 100) * 0.8;
         }
-        return ctx;
+        return configLine;
     }, [settings]);
 
     const startDrawing = useCallback((point: Point) => {
         if (!activeLayer) return;
-
-        const ctx = getContext(activeLayer.canvas);
-        if (!ctx) return;
-
         setIsDrawing(true);
-        startDrawingTimeRef.current = Date.now();
-        lastPointRef.current = point;
-        setSettings(prev => ({ ...prev, point }));
-
-        ctx.beginPath();
-        ctx.moveTo(point.x, point.y);
-        ctx.strokeStyle = settings.tool === 'eraser' ? 'rgba(0,0,0,0)' : settings.color;
-        ctx.lineWidth = settings.lineWidth;
-
-        if (settings.tool === 'eraser') {
-            ctx.globalCompositeOperation = 'destination-out';
-        } else {
-            ctx.globalCompositeOperation = 'source-over';
+        const config = getLineConfig(point);
+        if (config) {
+            const line = new Konva.Line(config);
+            activeLayer.canvas.add(line);
+            setCurrentLine(line);
         }
-
-        ctx.arc(point.x, point.y, settings.lineWidth / 2, 0, Math.PI * 2);
-        ctx.fill();
-    }, [activeLayer, getContext, settings]);
+        lastPointRef.current = point;
+    }, [activeLayer, getLineConfig, settings]);
 
     const draw = useCallback((point: Point) => {
         if (!isDrawing || !activeLayer || !lastPointRef.current) return;
 
-        const ctx = getContext(activeLayer.canvas);
-        if (!ctx) return;
-        setSettings(prev => ({ ...prev, point }));
-        if (settings.pattern !== 'spray') {
-            ctx.beginPath();
-            ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y);
-            ctx.lineTo(point.x, point.y);
-            ctx.stroke();
+        if (settings.tool === 'brush' && settings.pattern === 'spray') {
+            const dx = point.x - lastPointRef.current.x;
+            const dy = point.y - lastPointRef.current.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const steps = Math.ceil(distance / settings.lineWidth);
+            for (let step = 0; step < steps; step++) {
+                const t = step / steps;
+                const x = lastPointRef.current.x + dx * t;
+                const y = lastPointRef.current.y + dy * t;
+                const angle = Math.random() * Math.PI * 2;
+                const sprayRadius = Math.random() * settings.lineWidth;
+                const xOffset = Math.cos(angle) * sprayRadius;
+                const yOffset = Math.sin(angle) * sprayRadius;
+                const dotSize = Math.random() * (settings.lineWidth / 3);
+                const circle = new Konva.Circle({
+                    x: x + xOffset,
+                    y: y + yOffset,
+                    radius: dotSize,
+                    fill: settings.color,
+                    opacity: settings.opacity / 100,
+                });
+                activeLayer.canvas.add(circle);
+            }
+        } else if (settings.tool === 'brush' && settings.pattern === 'textured') {
+            /* const img = new Image();
+            img.src = '/textures/rough-paper.jpg';
+            const texturedLine = new Konva.Shape({
+                sceneFunc: (context, shape) => {
+                    context.beginPath();
+                    img.onload = () => {
+                        const pattern = context.createPattern(img, 'repeat');
+                        if (pattern) {
+                            context.fillStyle = pattern;
+                            context.strokeStyle = pattern;
+                        }
+                    };
+                    if (lastPointRef.current) {
+                        context.moveTo(lastPointRef.current.x, lastPointRef.current.y);
+                        context.lineTo(point.x, point.y);
+                        context.stroke();
+                    }
+                }
+            });
+            activeLayer.canvas.add(texturedLine); */
         } else {
-            getContext(activeLayer.canvas);
+            const newPoints = currentLine?.points().concat([point.x, point.y]);
+            currentLine?.points(newPoints);
         }
+        activeLayer.canvas.batchDraw();
 
         lastPointRef.current = point;
-    }, [isDrawing, activeLayer, getContext]);
+    }, [isDrawing, activeLayer]);
 
     const stopDrawing = useCallback(() => {
         if (isDrawing && activeLayer) {
             createHistorySnapshot(layers);
             setIsDrawing(false);
-            lastPointRef.current = null;
-            startDrawingTimeRef.current = null;
         }
     }, [isDrawing, activeLayer, createHistorySnapshot, layers]);
 
@@ -178,6 +192,10 @@ export const useCanvas = ({
         setSettings(prev => ({ ...prev, pattern }));
     }, []);
 
+    const setOpacityBrush = useCallback((opacity: number) => {
+        setSettings(prev => ({ ...prev, opacity }));
+    }, []);
+
     return {
         isDrawing,
         settings,
@@ -187,6 +205,7 @@ export const useCanvas = ({
         setColor,
         setLineWidth,
         setTool,
-        setBrushPattern
+        setBrushPattern,
+        setOpacityBrush
     };
 };

@@ -2,12 +2,11 @@ import { useState, useCallback } from 'react';
 import type { Layer } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { useHistory } from './useHistory';
+import Konva from 'konva';
 
 export const useLayers = (width: number, height: number) => {
     const createEmptyCanvas = useCallback(() => {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        const canvas = new Konva.Layer();
         return canvas;
     }, [width, height]);
 
@@ -17,7 +16,8 @@ export const useLayers = (width: number, height: number) => {
             name,
             visible: true,
             canvas: createEmptyCanvas(),
-            opacity: 1
+            opacity: 1,
+            canvasJSON: createEmptyCanvas().toJSON()
         };
     }, [createEmptyCanvas]);
 
@@ -45,6 +45,9 @@ export const useLayers = (width: number, height: number) => {
         setLayers(prev => {
             const index = prev.findIndex(layer => layer.id === id);
             if (index === -1) return prev;
+            if (prev[index].canvas) {
+                prev[index].canvas.destroy();
+            }
 
             const newLayers = [...prev.slice(0, index), ...prev.slice(index + 1)];
             createHistorySnapshot(newLayers);
@@ -108,6 +111,11 @@ export const useLayers = (width: number, height: number) => {
     const handleUndo = useCallback(() => {
         const previousLayers = undo();
         if (previousLayers) {
+            previousLayers.forEach(layer => {
+                if (layer.canvasJSON) {
+                    layer.canvas = Konva.Node.create(layer.canvasJSON);
+                }
+            });
             setLayers(previousLayers);
             setActiveLayerIndex(Math.min(activeLayerIndex, previousLayers.length - 1));
         }
@@ -116,6 +124,11 @@ export const useLayers = (width: number, height: number) => {
     const handleRedo = useCallback(() => {
         const nextLayers = redo();
         if (nextLayers) {
+            nextLayers.forEach(layer => {
+                if (layer.canvasJSON) {
+                    layer.canvas = Konva.Node.create(layer.canvasJSON);
+                }
+            });
             setLayers(nextLayers);
             setActiveLayerIndex(Math.min(activeLayerIndex, nextLayers.length - 1));
         }

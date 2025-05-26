@@ -29,25 +29,25 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
         switch (theme) {
             case 'light':
                 return {
-                    panel: 'bg-white shadow-lg',
-                    layer: 'bg-gray-50 hover:bg-gray-100',
-                    activeLayer: 'bg-blue-50 border-blue-200',
+                    panel: 'shadow-lg border border-gray-400',
+                    layer: 'bg-gray-50 border border-gray-300 hover:bg-gray-100',
+                    activeLayer: 'bg-blue-50 border border-black',
                     text: 'text-gray-900',
                     button: 'text-gray-600 hover:text-gray-900'
                 };
             case 'blue':
                 return {
                     panel: 'bg-blue-900/95 backdrop-blur-sm',
-                    layer: 'bg-blue-800/50 hover:bg-blue-800',
-                    activeLayer: 'bg-blue-700 border-blue-600',
+                    layer: 'bg-blue-800/50 border border-blue-600 hover:bg-blue-800',
+                    activeLayer: 'bg-blue-700 border',
                     text: 'text-white',
                     button: 'text-blue-300 hover:text-white'
                 };
             default:
                 return {
                     panel: 'bg-gray-900/95 backdrop-blur-sm',
-                    layer: 'bg-gray-800/50 hover:bg-gray-800',
-                    activeLayer: 'bg-gray-800 border-gray-700',
+                    layer: 'bg-gray-800/50  border-gray-700 hover:bg-gray-800',
+                    activeLayer: 'bg-gray-800 border',
                     text: 'text-white',
                     button: 'text-gray-400 hover:text-white'
                 };
@@ -57,7 +57,7 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
     const themeClasses = getThemeClasses();
 
     return (
-        <div className={`${themeClasses.panel} p-4 rounded-xl border border-gray-800 h-full`}>
+        <div className={`${themeClasses.panel} p-4 h-full`}>
             <div className="flex justify-between items-center mb-4">
                 <h3 className={`${themeClasses.text} font-medium flex items-center gap-2`}>
                     <Layers size={18} /> Layers
@@ -74,10 +74,11 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
                 {layers.map((layer, index) => (
                     <div
                         key={layer.id}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer ${index === activeLayerIndex
+                        className={`p-3 rounded-xl transition-all cursor-pointer ${index === activeLayerIndex
                             ? themeClasses.activeLayer
                             : themeClasses.layer
                             }`}
+                        
                         onClick={() => onSetActiveLayer(index)}
                     >
                         <div className="flex items-center justify-between">

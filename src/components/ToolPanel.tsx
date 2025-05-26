@@ -59,7 +59,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
         switch (theme) {
             case 'light':
                 return {
-                    toolbar: 'bg-white border-gray-200',
+                    toolbar: 'bg-white border border-gray-400',
                     tool: 'hover:bg-gray-100',
                     activeTool: 'bg-blue-50 text-blue-600',
                     divider: 'bg-gray-200'

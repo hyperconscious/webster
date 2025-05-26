@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Palette, Sun, Moon, ChevronDown, Menu } from 'lucide-react';
+import { Palette, Sun, Moon, ChevronDown, Menu, Cloud } from 'lucide-react';
 import type { Theme, CanvasSize } from '../types';
 
 interface HeaderProps {
@@ -46,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({
     const getThemeClasses = () => {
         switch (theme) {
             case 'light':
-                return 'bg-white border-gray-200';
+                return 'bg-white border-gray-400';
             case 'blue':
                 return 'bg-blue-900 border-blue-800';
             default:
@@ -67,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({
                 <button
                     onClick={() => setShowLeftSidebar(!showLeftSidebar)}
                     className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-200'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                         }`}
                 >
@@ -83,18 +83,18 @@ const Header: React.FC<HeaderProps> = ({
                 <button
                     onClick={handleThemeChange}
                     className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-200'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                         }`}
                 >
-                    {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+                    {theme === 'light' ? <Sun size={20} /> : theme === "blue" ? <Cloud size={20}/> : <Moon size={20} />}
                 </button>
 
                 <div className="relative">
                     <button
                         onClick={() => setShowSizeMenu(prev => !prev)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? ' bg-gray-300 text-gray-700 hover:bg-gray-200'
                             : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                             }`}
                     >
@@ -106,7 +106,7 @@ const Header: React.FC<HeaderProps> = ({
                         <div
                             ref={sizeMenuRef}
                             className={`absolute top-full right-0 mt-2 w-72 p-2 rounded-xl border shadow-xl z-50 ${theme === 'light'
-                                ? 'bg-white border-gray-200'
+                                ? 'bg-white border-gray-300'
                                 : 'bg-gray-800 border-gray-700'
                                 }`}
                         >
@@ -115,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({
                                     <button
                                         key={index}
                                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${theme === 'light'
-                                            ? 'hover:bg-gray-100'
+                                            ? 'hover:bg-gray-300'
                                             : 'hover:bg-gray-700'
                                             }`}
                                         onClick={() => {
@@ -138,7 +138,7 @@ const Header: React.FC<HeaderProps> = ({
                 <button
                     onClick={() => setShowRightSidebar(!showRightSidebar)}
                     className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-200'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                         }`}
                 >

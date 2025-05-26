@@ -1,3 +1,6 @@
+import type Konva from "konva";
+
+
 export interface Point {
     x: number;
     y: number;
@@ -12,6 +15,7 @@ export interface DrawingSettings {
     pressure?: number;
     angle?: number;
     point: Point;
+    opacity: number;
 }
 
 export type BrushPattern =
@@ -20,6 +24,7 @@ export type BrushPattern =
     | 'scatter'
     | 'calligraphy'
     | 'spray'
+    | 'polygon'
     | 'square'
     | 'textured';
 
@@ -46,8 +51,9 @@ export interface Layer {
     id: string;
     name: string;
     visible: boolean;
-    canvas: HTMLCanvasElement;
+    canvas: Konva.Layer;
     opacity: number;
+    canvasJSON: string;
 }
 
 export interface HistoryItem {
