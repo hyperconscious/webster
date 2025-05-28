@@ -1,0 +1,25 @@
+Theme:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the theme
+      example: "12345"
+    name:
+      type: string
+      description: Name of the theme
+      example: "Technology"
+    description:
+      type: string
+      description: Description of the theme
+      example: "Events related to technology advancements and innovations."
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the theme was created
+      example: "2023-10-01T12:00:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      description: Timestamp when the theme was last updated
+      example: "2023-10-01T12:00:00Z"

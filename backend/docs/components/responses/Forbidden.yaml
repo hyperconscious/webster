@@ -1,0 +1,15 @@
+description: Forbidden request
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 403
+        method:
+          type: string
+          example: "POST"
+        message:
+          type: string
+          example: "Access denied"

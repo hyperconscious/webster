@@ -1,0 +1,52 @@
+Notification:
+  type: object
+  properties:
+    id:
+      type: integer
+      description: Unique identifier of the notification
+      example: 1
+
+    title:
+      type: string
+      description: Title of the notification
+      example: "Event Reminder"
+
+    message:
+      type: string
+      description: Detailed message of the notification
+      example: "Don't forget your meeting tomorrow at 10 AM."
+
+    type:
+      type: string
+      description: Type of the notification
+      enum:
+        - event_reminder
+        - event_change
+        - event_cancellation
+        - event_invitation
+      example: event_reminder
+
+    isRead:
+      type: boolean
+      description: Indicates whether the notification has been read
+      example: false
+
+    userId:
+      type: integer
+      description: ID of the user this notification belongs to
+      example: 42
+
+    createdAt:
+      type: string
+      format: date-time
+      description: Date and time when the notification was created
+      example: "2025-05-01T10:15:30.000Z"
+
+  required:
+    - id
+    - title
+    - message
+    - type
+    - isRead
+    - userId
+    - createdAt

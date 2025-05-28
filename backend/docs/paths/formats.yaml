@@ -1,0 +1,127 @@
+formats:
+  get:
+    tags:
+      - Format
+    summary: Get all formats
+    description: Retrieves a list of all formats with optional pagination and filtering.
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 10
+      - in: query
+        name: name
+        schema:
+          type: string
+    responses:
+      200:
+        description: List of formats
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/format.yaml#/Format'
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+
+  post:
+    tags:
+      - Format
+    summary: Create a new format
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/format.yaml#/Format'
+    responses:
+      201:
+        description: Format created successfully
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+      403:
+        $ref: '../components/responses/Forbidden.yaml'
+
+format:
+  get:
+    tags:
+      - Format
+    summary: Get format by ID
+    parameters:
+      - name: format_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Format found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/format.yaml#/Format'
+      404:
+        $ref: '../components/responses/NotFound.yaml'
+
+  patch:
+    tags:
+      - Format
+    summary: Update format by ID
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: format_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/format.yaml#/Format'
+    responses:
+      200:
+        description: Format updated
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+      403:
+        $ref: '../components/responses/Forbidden.yaml'
+      404:
+        $ref: '../components/responses/NotFound.yaml'
+
+  delete:
+    tags:
+      - Format
+    summary: Delete format by ID
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: format_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Format deleted successfully
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+      403:
+        $ref: '../components/responses/Forbidden.yaml'
+      404:
+        $ref: '../components/responses/NotFound.yaml'

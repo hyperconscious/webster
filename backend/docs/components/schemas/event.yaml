@@ -1,0 +1,60 @@
+Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Sample Event"
+        description:
+          type: string
+          example: "This is a sample event description."
+        startDate:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2024-01-01T14:00:00Z"
+        picture:
+          type: string
+          example: "event.jpg"
+        price:
+          type: number
+          example: 100.00
+        themes:
+          type: array
+          items:
+            $ref: "./theme.yaml#/Theme"
+        format:
+          $ref: "./format.yaml#/Format"
+        locationLatitude:
+          type: number
+          example: 40.7128
+        locationLongitude:
+          type: number
+          example: -74.0060
+        locationDescription:
+          type: string
+          example: "New York, NY"
+        locationAddress:
+          type: string
+          example: "123 Main St, New York, NY 10001"
+        attendeesCount:
+          type: integer
+          example: 50
+        ticketsAvailable:
+          type: integer
+          example: 100
+        organizer:
+          $ref: "./company.yaml#/Company"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"

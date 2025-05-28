@@ -1,0 +1,18 @@
+description: Invalid request
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        method:
+          type: string
+          example: "POST"
+        message:
+          type: string
+          example: "Invalid request"
+        path:
+          type: string
+          example: "/api/auth/login"

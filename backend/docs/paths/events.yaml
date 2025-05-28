@@ -1,0 +1,351 @@
+  events:
+    get:
+      tags:
+        - Event
+      summary: Get all events
+      operationId: getAllEvents
+      parameters:
+        - in: query
+          name: sortField
+          schema:
+            type: string
+            enum: ['createdAt', 'updatedAt', 'name', 'id', 'price', 'startDate', 'endDate', 'ticketsAvailable', 'attendeesCount']
+            default: 'createdAt'
+          description: Sort the events by a field
+        - in: query
+          name: themes
+          schema:
+            type: array
+            items:
+              type: string
+          description: Filter events by themes
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Filter events by name
+        - in: query
+          name: description
+          schema:
+            type: string
+          description: Filter events by description
+        - in: query
+          name: minDate
+          schema:
+            type: string
+            format: date-time
+          description: Filter events by minimum date
+        - in: query
+          name: maxDate
+          schema:
+            type: string
+            format: date-time
+          description: Filter events by maximum date
+        - in: query
+          name: minPrice
+          schema:
+            type: number
+            format: float
+          description: Filter events by minimum price
+        - in: query
+          name: maxPrice
+          schema:
+            type: number
+            format: float
+          description: Filter events by maximum price
+        - in: query
+          name: format
+          schema:
+            type: string
+          description: Filter events by format
+        - in: query
+          name: organizerId
+          schema:
+            type: number
+          description: Filter events by organizer ID
+        - in: query
+          name: isStrictThemes
+          schema:
+            type: boolean
+          description: Whether to apply strict theme matching
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search events by name or description
+        - in: query
+          name: searchType
+          schema:
+            type: string
+          description: Search type filter
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of events per page
+      responses:
+        '200':
+          description: A list of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/Event.yaml#/Event'
+
+  event:
+    get:
+      tags:
+        - Event
+      summary: Get a specific event by ID
+      operationId: getEventById
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      responses:
+        '200':
+          description: A specific event
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/Event.yaml#/Event'
+        '404':
+          description: Event not found
+    patch:
+      tags:
+        - Event
+      summary: Update a specific event by ID
+      operationId: updateEventById
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: integer
+          description: ID of the event to update
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Event.yaml#/Event'  # Replace with UpdateEvent DTO schema if available
+      responses:
+        '200':
+          description: Successfully updated the event
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/Event.yaml#/Event'
+        '400':
+          description: Invalid event ID or bad request data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
+
+  themes:
+    get:
+      tags:
+        - Event
+      summary: Get themes of a specific event by ID
+      operationId: getThemesByEventId
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      responses:
+        '200':
+          description: List of themes for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  comments:
+    get:
+      tags:
+        - Event
+      summary: Get comments of a specific event by ID
+      operationId: getCommentsByEventId
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      responses:
+        '200':
+          description: List of comments for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../components/schemas/Comment.yaml#/Comment'
+
+  users:
+    get:
+      tags:
+        - Event
+      summary: Get users participating in a specific event by ID
+      operationId: getUsersByEventId
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      responses:
+        '200':
+          description: List of users for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  promoCodes:
+    get:
+      tags:
+        - Event
+      summary: Get promo codes for a specific event by ID
+      operationId: getPromoCodesByEventId
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of promo codes for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  participants:
+    get:
+      tags:
+        - Event
+      summary: Get participants for a specific event by ID
+      operationId: getParticipantsByEventId
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of participants for the event
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+    post:
+      tags:
+        - Event
+      summary: Add a participant to a specific event by ID
+      operationId: addParticipantToEvent
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Participant added to the event
+        '400':
+          description: Invalid request
+
+  attend:
+    post:
+      tags:
+        - Event
+      summary: Mark attendance for a specific event
+      operationId: attendEvent
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Attendance marked successfully
+        '400':
+          description: Invalid request
+
+  comment:
+    post:
+      tags:
+        - Event
+      summary: Add a comment to a specific event
+      operationId: addCommentToEvent
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: string
+          description: ID of the event
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Comment.yaml#/Comment'
+      responses:
+        '201':
+          description: Comment successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '../components/schemas/Comment.yaml#/Comment'
+        '400':
+          description: Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
