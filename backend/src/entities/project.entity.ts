@@ -9,7 +9,7 @@ export class Project {
     @Column({default: ''})
     name!: string;
 
-    @Column()
+    @Column({ type: 'longtext' })
     data!: string;
 
     @ManyToOne(() => User, user => user.projects)

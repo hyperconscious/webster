@@ -58,6 +58,8 @@ const envSchema = z.object({
   GOOGLE_CLOUD_TRANSLATION_API_KEY: z.string(),
 
   CHECK_SWAGGER_FILES_VALIDATION: toBoolean().default(true),
+
+  USE_REQUEST_LOGGER: toBoolean().default(true),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -115,4 +117,5 @@ export default {
     projectId: envVars.GOOGLE_CLOUD_PROJECT_ID,
     apiKey: envVars.GOOGLE_CLOUD_TRANSLATION_API_KEY,
   },
+  useRequestLogger: envVars.USE_REQUEST_LOGGER,
 };

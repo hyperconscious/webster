@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from 'express';
 import config from '../config/env.config';
 
 export async function verifyRecaptcha(req: Request, res: Response, next: NextFunction) {
-    console.log("hello");
     if(!config.isCheckRecaptcha)
     {
         return next();

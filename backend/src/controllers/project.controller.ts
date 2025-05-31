@@ -66,7 +66,6 @@ export class ProjectController
     public static async createProject(req: Request, res: Response)
     {
         const user = await ProjectController.userService.getUserById(req.user?.id!);
-        console.log('User:', user);
         if (!user) {
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'You need to be logged in.' });
         }

@@ -39,8 +39,9 @@ class ChronosServer {
     this.app.use(limiter);
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-
-    this.app.use(requestLogger);
+    if(config.useRequestLogger) {
+      this.app.use(requestLogger);
+    }
 
   }
 
