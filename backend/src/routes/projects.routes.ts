@@ -9,14 +9,14 @@ const projectRouter = Router();
 
 projectRouter.get("/", authAdmin, validateSchema(projectQueryDto, 'query'), ProjectController.getAllProjects);
 projectRouter.get("/my-projects", auth, ProjectController.getMyProjects);
-projectRouter.get("/:id", auth, ProjectController.getProjectById);
+projectRouter.get("/:slug", auth, ProjectController.getProjectBySlug);
 
 projectRouter.get("/of-user/:user_id", authOwnerOrAdmin, ProjectController.getProjectsByUserId);
 
 projectRouter.post("/", auth, validateSchema(createProjectDto), ProjectController.createProject);
-projectRouter.patch("/:id", auth, validateSchema(updateProjectDto), ProjectController.updateProject);
-projectRouter.post("/:id/copy", auth, ProjectController.copyProject);
+projectRouter.patch("/:slug", auth, validateSchema(updateProjectDto), ProjectController.updateProject);
+projectRouter.post("/:slug/copy", auth, ProjectController.copyProject);
 
-projectRouter.delete("/:id", auth, ProjectController.deleteProject);
+projectRouter.delete("/:slug", auth, ProjectController.deleteProject);
 
 export default projectRouter;

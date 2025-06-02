@@ -6,7 +6,10 @@ export class Project {
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column({default: ''})
+    @Column({ default: '' })
+    slug!: string;
+
+    @Column({ default: '' })
     name!: string;
 
     @Column({ type: 'longtext' })
