@@ -15,6 +15,9 @@ export class Project {
     @Column({ type: 'longtext' })
     data!: string;
 
+    @Column({ default: '' })
+    description?: string;
+
     @ManyToOne(() => User, user => user.projects)
     user!: User;
 

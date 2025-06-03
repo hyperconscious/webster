@@ -1,4 +1,4 @@
-import { type CredentialResponse, GoogleLogin} from "@react-oauth/google";
+import { type CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import React, { type RefObject, useEffect, useState, useContext } from "react";
 import { notifyDismiss, notifyLoading, notifySuccess } from "../utils/notification.tsx";
 import AuthService from "../services/AuthService.ts";
@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 
 interface GoogleAuthButtonProps {
-    containerRef: RefObject<HTMLDivElement>;
+    containerRef: RefObject<HTMLDivElement | null>;
     loadingMessage: string,
     successMessage: string
 }
@@ -22,7 +22,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
     const { refreshUser } = useContext(UserContext) || {};
 
     useEffect(() => {
-        if (containerRef.current) {
+        if (containerRef?.current) {
             setContainerWidth(containerRef.current.offsetWidth);
         }
     }, [containerRef]);

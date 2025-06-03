@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Palette, Sun, Moon, ChevronDown, Menu, Cloud } from 'lucide-react';
+import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen } from 'lucide-react';
 import type { Theme, CanvasSize } from '../types';
+import { Link } from 'react-router-dom';
+import ProjectService from '../services/ProjectService';
 
 interface HeaderProps {
     theme: Theme;
@@ -9,10 +11,10 @@ interface HeaderProps {
     onSizeChange: (width: number, height: number) => void;
     currentWidth: number;
     currentHeight: number;
-    showLeftSidebar: boolean;
-    setShowLeftSidebar: (show: boolean) => void;
-    showRightSidebar: boolean;
-    setShowRightSidebar: (show: boolean) => void;
+    projectSlug?: string;
+    initialProjectName: string;
+    onSaveProject?: () => void;
+    setNewProjectName?: (name: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -22,13 +24,17 @@ const Header: React.FC<HeaderProps> = ({
     onSizeChange,
     currentWidth,
     currentHeight,
-    showLeftSidebar,
-    setShowLeftSidebar,
-    showRightSidebar,
-    setShowRightSidebar
+    projectSlug,
+    initialProjectName,
+    onSaveProject,
+    setNewProjectName
 }) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
+    // const navigate = useNavigate();
     const sizeMenuRef = useRef<HTMLDivElement>(null);
+    const [projectName, setProjectName] = useState(initialProjectName || 'Untitled');
+    const [editingName, setEditingName] = useState(false);
+    const nameInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -46,13 +52,24 @@ const Header: React.FC<HeaderProps> = ({
     const getThemeClasses = () => {
         switch (theme) {
             case 'light':
-                return 'bg-white border-gray-400';
+                return {
+                    bg: 'bg-white border-gray-400',
+                    divider: 'bg-gray-300'
+                };
             case 'blue':
-                return 'bg-blue-900 border-blue-800';
+                return {
+                    bg: 'bg-blue-900 border-blue-800',
+                    divider: 'bg-blue-700'
+                };
             default:
-                return 'bg-gray-900 border-gray-700';
+                return {
+                    bg: 'bg-gray-900 border-gray-700',
+                    divider: 'bg-gray-800'
+                };
         }
     };
+
+    const themeClasses = getThemeClasses();
 
     const handleThemeChange = () => {
         const themes: Theme[] = ['light', 'dark', 'blue'];
@@ -61,40 +78,105 @@ const Header: React.FC<HeaderProps> = ({
         setTheme(themes[nextIndex]);
     };
 
+    const handleNameSave = async () => {
+        if (projectName.trim() === '') {
+            setProjectName('Untitled');
+        }
+        setEditingName(false);
+        setNewProjectName?.(projectName);
+        if (!projectSlug) {
+            return;
+        }
+        await ProjectService.updateProject(projectSlug, { name: projectName });
+    };
+
     return (
-        <header className={`p-4 flex items-center justify-between border-b ${getThemeClasses()}`}>
+        <header className={`p-4 flex items-center justify-between ${themeClasses.bg}`}>
             <div className="flex items-center gap-4">
-                <button
-                    onClick={() => setShowLeftSidebar(!showLeftSidebar)}
-                    className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-200'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                        }`}
-                >
-                    <Menu size={20} />
-                </button>
                 <div className="flex items-center gap-2">
                     <Palette className="text-blue-500" size={24} />
                     <h1 className="text-xl font-bold">Photster</h1>
                 </div>
+
+                <div className={`w-px h-8 ${themeClasses.divider}`}></div>
+
+                <div className="flex items-center gap-4">
+                    {editingName ? (
+                        <input
+                            ref={nameInputRef}
+                            value={projectName}
+                            maxLength={32}
+                            placeholder="Project Name"
+                            onChange={(e) => setProjectName(e.target.value)}
+                            onBlur={handleNameSave}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    nameInputRef.current?.blur();
+                                }
+                            }}
+                            className={`px-2 py-1 rounded-md text-base border outline-none transition-all w-48 ${theme === 'light'
+                                ? 'bg-white border-gray-300 text-gray-700'
+                                : 'bg-gray-700 border-gray-600 text-white'
+                                }`}
+                            autoFocus
+                        />
+                    ) : (
+                        <span
+                            onClick={() => setEditingName(true)}
+                            className="text-base font-semibold cursor-pointer hover:underline"
+                        >
+                            {projectName}
+                        </span>
+                    )}
+
+                    <button
+                        onClick={onSaveProject}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
+                            ? ' text-gray-700 hover:bg-gray-200'
+                            : ' text-gray-300 hover:bg-gray-700'
+                            }`}
+                        title="Save Project"
+                    >
+                        <Save size={18} />
+                    </button>
+
+                    <div className={`w-px h-8 ${themeClasses.divider}`}></div>
+
+                    <Link
+                        to="/projects"
+                        onClick={(e) => {
+                            if (!window.confirm("Are you sure you want to leave this page? Any unsaved changes will be lost.")) {
+                                e.preventDefault();
+                            }
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                            }`}
+                        title="Open Projects"
+                    >
+                        <FolderOpen size={18} />
+                        Projects
+                    </Link>
+                </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
                 <button
                     onClick={handleThemeChange}
                     className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                         }`}
                 >
-                    {theme === 'light' ? <Sun size={20} /> : theme === "blue" ? <Cloud size={20}/> : <Moon size={20} />}
+                    {theme === 'light' ? <Sun size={20} /> : theme === "blue" ? <Cloud size={20} /> : <Moon size={20} />}
                 </button>
 
                 <div className="relative">
                     <button
                         onClick={() => setShowSizeMenu(prev => !prev)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
-                            ? ' bg-gray-300 text-gray-700 hover:bg-gray-200'
+                            ? ' bg-gray-100 text-gray-700 hover:bg-gray-200'
                             : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                             }`}
                     >
@@ -134,18 +216,8 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                     )}
                 </div>
-
-                <button
-                    onClick={() => setShowRightSidebar(!showRightSidebar)}
-                    className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-200'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                        }`}
-                >
-                    <Menu size={20} />
-                </button>
             </div>
-        </header>
+        </header >
     );
 }
 

@@ -31,15 +31,11 @@ class ChronosServer {
   private configureMiddleware(): void {
     const uploadsPath = path.resolve(__dirname, '../uploads');
     this.app.use('/uploads', express.static(uploadsPath));
-    this.app.use(cors({
-      origin: 'http://localhost:5173',
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'x-callback-url'],
-    }));
+    this.app.use(cors());
     this.app.use(limiter);
-    this.app.use(express.json());
+    this.app.use(express.json({ limit: '50mb' }));
     this.app.use(express.urlencoded({ extended: true }));
-    if(config.useRequestLogger) {
+    if (config.useRequestLogger) {
       this.app.use(requestLogger);
     }
 
@@ -75,7 +71,7 @@ class ChronosServer {
       //   initPromoCodeCleanupCron();
       // }
     } catch (error) {
-      startupLogger.error(error instanceof Error ? error.message:
+      startupLogger.error(error instanceof Error ? error.message :
         'An unexpected error occurred while starting the server.'
       );
     }

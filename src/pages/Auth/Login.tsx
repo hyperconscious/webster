@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useContext } from 'react';
 import { ArrowRight, Mail, Lock } from 'lucide-react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
-import { joiResolver } from '@hookform/resolvers/joi';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { type LoginData, loginSchema } from '../../validation/schemas';
 import InputField from '../../components/InputField';
 import AuthService from '../../services/AuthService';
@@ -28,7 +28,7 @@ function Login() {
         handleSubmit,
         formState: { errors },
     } = useForm<LoginData>({
-        resolver: joiResolver(loginSchema),
+        resolver: zodResolver(loginSchema),
     });
 
     const onSubmit: SubmitHandler<LoginData> = async (data) => {

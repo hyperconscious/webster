@@ -36,8 +36,23 @@ export class ProjectService {
         return this.projectRepository.findOne({ where: { slug } });
     }
 
-    public async getProjectsByUserId(userId: number): Promise<Project[]> {
-        return this.projectRepository.find({ where: { user: { id: userId } } });
+    public async getProjectsByUserId(userId: number, validatedQuery: ProjectQueryDto): Promise<PaginationResult<Project>> {
+        const queryBuilder = this.projectRepository.createQueryBuilder("project")
+        queryBuilder.where("project.userId = :userId", { userId });
+        queryBuilder.leftJoinAndSelect("project.user", "user");
+        if (validatedQuery.filters) {
+            applyCondition(queryBuilder, 'name', "LIKE", validatedQuery.filters.name);
+        }
+
+        applySortingToQueryBuilder(queryBuilder, {
+            sortDirection: validatedQuery.sortDirection || 'ASC',
+            sortField: validatedQuery.sortBy || 'createdAt',
+        }, 'project');
+
+        return await paginateQueryBuilder(queryBuilder, {
+            page: validatedQuery.page,
+            limit: validatedQuery.limit,
+        });
     }
 
     public async createProject(projectData: Partial<Project>): Promise<Project> {
@@ -50,13 +65,13 @@ export class ProjectService {
         return this.projectRepository.save(project);
     }
 
-    public async updateProject(slug: string, projectData: Partial<Project>): Promise<Project | null> {
-        await this.projectRepository.update(slug, projectData);
-        return this.getProjectBySlug(slug);
+    public async updateProject(id: number, projectData: Partial<Project>): Promise<Project | null> {
+        await this.projectRepository.update(id, projectData);
+        return this.getProjectById(id);
     }
 
-    public async deleteProject(slug: string): Promise<void> {
-        await this.projectRepository.delete(slug);
+    public async deleteProject(id: number): Promise<void> {
+        await this.projectRepository.delete(id);
     }
 
     public async copyProject(slug: string): Promise<Project | null> {

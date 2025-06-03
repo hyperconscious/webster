@@ -14,7 +14,6 @@ function Authentication() {
     const [tokens] = useState(AuthStore.getTokens());
 
     useEffect(() => {
-        console.log('Tokens:', tokens);
         if (tokens.accessToken) {
             navigate('/');
         }

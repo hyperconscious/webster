@@ -21,7 +21,6 @@ export class ProjectController {
             });
         }
         return res.status(StatusCodes.OK).json(await ProjectController.projectService.getAllProjects(validatedQuery.data));
-
     }
 
     public static async getProjectBySlug(req: Request, res: Response) {
@@ -44,11 +43,19 @@ export class ProjectController {
     }
 
     public static async getMyProjects(req: Request, res: Response) {
+        const validatedQuery = projectQueryDto.safeParse(req.query);
+        checkBadRequestError(validatedQuery.error);
+        if (!validatedQuery.success) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: 'Invalid query parameters',
+                errors: validatedQuery.error.errors,
+            });
+        }
         const userId = req.user?.id;
         if (!userId) {
             return res.status(StatusCodes.UNAUTHORIZED).json({ message: 'You need to be logged in.' });
         }
-        const projects = await ProjectController.projectService.getProjectsByUserId(userId);
+        const projects = await ProjectController.projectService.getProjectsByUserId(userId, validatedQuery.data);
         res.status(StatusCodes.OK).json(projects);
     }
 
@@ -83,7 +90,7 @@ export class ProjectController {
             return res.status(StatusCodes.FORBIDDEN).json({ message: 'You are not allowed to update this project.' });
         }
         const projectData: Partial<Project> = req.body;
-        const updatedProject = await ProjectController.projectService.updateProject(projectSlug, projectData);
+        const updatedProject = await ProjectController.projectService.updateProject(project.id, projectData);
         if (!updatedProject) {
             return res.status(StatusCodes.NOT_FOUND).json({ message: 'Project not found.' });
         }
@@ -99,10 +106,11 @@ export class ProjectController {
         if (!(await ProjectController.projectService.checkAuthorship(projectSlug, user.id)) && user.role !== 'admin') {
             return res.status(StatusCodes.FORBIDDEN).json({ message: 'You are not allowed to delete this project.' });
         }
-        if (!(await ProjectController.projectService.getProjectBySlug(projectSlug))) {
+        const project = await ProjectController.projectService.getProjectBySlug(projectSlug);
+        if (!project) {
             return res.status(StatusCodes.NOT_FOUND).json({ message: 'Project not found.' });
         }
-        await ProjectController.projectService.deleteProject(projectSlug);
+        await ProjectController.projectService.deleteProject(project.id);
         return res.status(StatusCodes.NO_CONTENT).json({ message: 'Project deleted successfully.' });
     }
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import AuthService from '../../services/AuthService';
 import { notifyDismiss, notifyError, notifyLoading, notifySuccess } from '../../utils/notification';
-import { joiResolver } from '@hookform/resolvers/joi';
+import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
 import { passwordResetSchema, type ResetPasswordData } from '../../validation/schemas';
 import { type SubmitHandler, useForm } from 'react-hook-form';
@@ -19,7 +19,7 @@ const PasswordResetPage: React.FC = () => {
         handleSubmit,
         formState: { errors },
     } = useForm<ResetPasswordData>({
-        resolver: joiResolver(passwordResetSchema),
+        resolver: zodResolver(passwordResetSchema),
     });
 
     const onSubmit: SubmitHandler<ResetPasswordData> = async (data) => {

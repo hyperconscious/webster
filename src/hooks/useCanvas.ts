@@ -87,7 +87,6 @@ export const useCanvas = ({
                     img.onerror = (error) => {
                         console.error('Ошибка загрузки изображения:', error);
                     };
-    
                     break; */
                 default:
                     // No additional modifications needed

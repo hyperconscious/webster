@@ -47,8 +47,14 @@ apiClient.interceptors.response.use(
     }
 
     if (error.response?.data?.message && error.response?.data?.message != 'No token provided.' && error.response?.data?.message != 'User not found') {
-      console.error('API Error:', error.response.data.details);
+      console.error('API Error:', error);
+      console.error('Details:', error.response.data.details);
       notifyError(`${error.response.data.message}`);
+    }
+
+    if (!error.response) {
+      console.error('Network Error', error.message);
+      notifyError('Network error: server unavailable. Try again later.');
     }
 
     return Promise.reject(error);
