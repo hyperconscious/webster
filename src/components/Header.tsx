@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen, File, History, BookDashed } from 'lucide-react';
+import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen, File, History, BookDashed, User, LogOut } from 'lucide-react';
 import type { Theme, CanvasSize } from '../types';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import ProjectService from '../services/ProjectService';
+import { useUser } from '../hooks/useUser';
+import AuthStore from '../store/AuthStore';
 
 interface MenuItem {
     label: string;
@@ -50,13 +52,14 @@ const Header: React.FC<HeaderProps> = ({
     onExportPDF
 }) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const sizeMenuRef = useRef<HTMLDivElement>(null);
     const [projectName, setProjectName] = useState(initialProjectName || 'Untitled');
     const [editingName, setEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isOpen, setIsOpen] = useState(false);
     const isOpenRef = useRef<HTMLDivElement>(null);
+    const { user } = useUser();
 
     const menuItems: MenuItem[] = [
         { label: "Add this template", icon: <BookDashed size={16} />, onClick: () => onAddTemplate?.() },
@@ -286,6 +289,35 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                     )}
                 </div>
+
+                <button
+                    onClick={() => {
+                        navigate('/profile');
+                    }}
+                    className={`p-2 rounded-lg transition-colors ${theme === 'light'
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    }`}
+                    title="Profile"
+                >
+                    <User size={20} />
+                </button>
+
+                {user && (
+                    <button
+                        onClick={() => {
+                            AuthStore.removeTokens();
+                            navigate('/auth');
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${theme === 'light'
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        }`}
+                        title="Logout"
+                    >
+                        <LogOut size={20} />
+                    </button>
+                )}
             </div>
         </header >
     );
