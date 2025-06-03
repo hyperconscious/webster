@@ -12,12 +12,16 @@ import ProjectService from '../services/ProjectService';
 import { notifyError, notifySuccess } from '../utils/notification';
 import Konva from 'konva';
 
-const Editor = () => {
+interface EditorPageProps {
+    theme: Theme;
+    setTheme: (theme: Theme) => void;
+}
+
+const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
     const { slug } = useParams();
     const isProject = !!slug;
     const [canvasWidth, setCanvasWidth] = useState(1200);
     const [canvasHeight, setCanvasHeight] = useState(800);
-    const [theme, setTheme] = useState<Theme>('light');
     const [projectName, setProjectName] = useState('Untitled');
     const [showShapesPanel, setShowShapesPanel] = useState(false);
     const [showLeftSidebar, setShowLeftSidebar] = useState(true);
@@ -57,6 +61,7 @@ const Editor = () => {
                 }
             } else {
                 // loadFromLocalStorage();
+                setIsLoading(false);
             }
         };
 
@@ -125,7 +130,6 @@ const Editor = () => {
             const lastHistoryItem = history[history.length - 1];
 
             const projectData = {
-                slug: slug,
                 width: canvasWidth,
                 height: canvasHeight,
                 theme,
@@ -155,6 +159,44 @@ const Editor = () => {
         }
     };
 
+
+    const handleAddTemplate = async () => {
+        if (!isProject) {
+            notifyError("You need to log in and save the project first before adding a template.");
+            return;
+        }
+        try {
+            createHistorySnapshot(layers);
+            const lastHistoryItem = history[history.length - 1];
+
+            const projectData = {
+                width: canvasWidth,
+                height: canvasHeight,
+                theme,
+                layers: lastHistoryItem.layers.map(layer => ({
+                    ...layer,
+                    canvasJSON: typeof layer.canvasJSON === 'string'
+                        ? JSON.parse(layer.canvasJSON)
+                        : layer.canvasJSON
+                }))
+            };
+
+            const response = await ProjectService.createProject({
+                name: projectName,
+                isTemplate: true,
+                data: JSON.stringify(projectData),
+            });
+            if (!response) {
+                notifyError('Failed to create templatre. Please try again.');
+                return;
+            }
+            // navigate(`/projects/${response.slug}`);
+            notifySuccess("Template added successfully!");
+        } catch (error) {
+            notifyError('Failed to create templatre. Please try again.');
+        }
+    }
+
     useEffect(() => {
         if (!isProject) return;
         const autosaveInterval = setInterval(() => {
@@ -166,8 +208,8 @@ const Editor = () => {
 
     return (
         isLoading ? (
-            <div className="flex items-center justify-center h-screen">
-                <p className="text-gray-500">Loading project...</p>
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
             </div>
         ) : (
             <div className={`flex flex-col h-screen ${getThemeClasses()}`}>
@@ -183,6 +225,7 @@ const Editor = () => {
                         projectSlug={slug}
                         initialProjectName={projectName}
                         setNewProjectName={setProjectName}
+                        onAddTemplate={handleAddTemplate}
                     />
                     <ToolPanel
                         currentTool={settings.tool}

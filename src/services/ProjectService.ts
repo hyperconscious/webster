@@ -15,7 +15,7 @@ class ProjectService {
     }
 
     static async getMyProjects(query: QueryOptions): Promise<PaginatedResponse<Project>> {
-        const response = await axios.get('/api/projects/my', { params: query });
+        const response = await axios.get('/api/projects/my-projects', { params: query });
         return response.data;
     }
 
@@ -25,6 +25,7 @@ class ProjectService {
     }
 
     static async createProject(projectData: Partial<Project>): Promise<Project> {
+        console.log('Creating project with data:', projectData);
         const response = await axios.post('/api/projects', projectData);
         return response.data;
     }

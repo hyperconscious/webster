@@ -83,6 +83,8 @@ export interface Project {
     slug: string;
     name: string;
     data: string;
+    isTemplate: boolean;
+    thumbnail: string;
     description?: string;
     userId: number;
     createdAt: string;

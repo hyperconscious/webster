@@ -12,6 +12,11 @@ const baseProjectFields = {
   data: z
     .string({ required_error: 'Project data is required.' })
     .min(1, { message: 'Project data must be at least 1 character long.' }),
+
+  isTemplate: z
+    .boolean()
+    .default(false)
+    .optional(),
 };
 
 const filtersSchema = z.object({
@@ -19,6 +24,10 @@ const filtersSchema = z.object({
     .string()
     .min(1, { message: 'Name filter must be at least 1 character long.' })
     .optional(),
+  isTemplate: z.preprocess((val) => {
+    if (typeof val === "string") return val.toLowerCase() === "true";
+    return val;
+  }, z.boolean().optional().default(false)),
 });
 
 export const createProjectDto = z.object({

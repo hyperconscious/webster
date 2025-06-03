@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./user.entity";
+import { boolean } from "zod";
 
 @Entity()
 export class Project {
@@ -17,6 +18,9 @@ export class Project {
 
     @Column({ default: '' })
     description?: string;
+
+    @Column({ type: 'boolean', default: false })
+    isTemplate!: boolean;
 
     @ManyToOne(() => User, user => user.projects)
     user!: User;

@@ -29,11 +29,11 @@ export class ProjectService {
     }
 
     public async getProjectById(id: number): Promise<Project | null> {
-        return this.projectRepository.findOne({ where: { id } });
+        return this.projectRepository.findOne({ where: { id }, relations: ['user'] });
     }
 
     public async getProjectBySlug(slug: string): Promise<Project | null> {
-        return this.projectRepository.findOne({ where: { slug } });
+        return this.projectRepository.findOne({ where: { slug }, relations: ['user'] });
     }
 
     public async getProjectsByUserId(userId: number, validatedQuery: ProjectQueryDto): Promise<PaginationResult<Project>> {
@@ -42,6 +42,7 @@ export class ProjectService {
         queryBuilder.leftJoinAndSelect("project.user", "user");
         if (validatedQuery.filters) {
             applyCondition(queryBuilder, 'name', "LIKE", validatedQuery.filters.name);
+            applyCondition(queryBuilder, 'isTemplate', "=", validatedQuery.filters.isTemplate);
         }
 
         applySortingToQueryBuilder(queryBuilder, {
@@ -85,6 +86,8 @@ export class ProjectService {
             id: undefined,
             slug: newSlug,
             name: `${project.name} (Copy)`,
+            user: project.user,
+            isTemplate: project.isTemplate || false,
         });
         return this.projectRepository.save(newProject);
     }

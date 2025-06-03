@@ -57,7 +57,7 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
     const themeClasses = getThemeClasses();
 
     return (
-        <div className={`${themeClasses.panel} p-4 h-full`}>
+        <div className={`${themeClasses.panel} p-4 h-full flex flex-col`}>
             <div className="flex justify-between items-center mb-4">
                 <h3 className={`${themeClasses.text} font-medium flex items-center gap-2`}>
                     <Layers size={18} /> Layers
@@ -70,7 +70,7 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
                 </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 overflow-y-auto flex-1">
                 {layers.map((layer, index) => (
                     <div
                         key={layer.id}
@@ -78,7 +78,6 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
                             ? themeClasses.activeLayer
                             : themeClasses.layer
                             }`}
-                        
                         onClick={() => onSetActiveLayer(index)}
                     >
                         <div className="flex items-center justify-between">

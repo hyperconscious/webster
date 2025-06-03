@@ -59,7 +59,6 @@ export class ProjectController {
         res.status(StatusCodes.OK).json(projects);
     }
 
-
     public static async getProjectsByUserId(req: Request, res: Response) {
         const userId = req.params.user_id;
         res.status(StatusCodes.OK).json({ message: `Get projects by user id: ${userId}` });

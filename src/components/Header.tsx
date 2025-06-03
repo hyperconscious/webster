@@ -1,8 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen } from 'lucide-react';
+import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen, File, History, BookDashed } from 'lucide-react';
 import type { Theme, CanvasSize } from '../types';
 import { Link } from 'react-router-dom';
 import ProjectService from '../services/ProjectService';
+import { notifyError } from '../utils/notification';
+import { v4 as uuidv4 } from 'uuid';
+
+interface MenuItem {
+    label: string;
+    icon: React.ReactNode;
+    shortcut?: string;
+    divider?: boolean;
+    onClick?: () => void;
+}
 
 interface HeaderProps {
     theme: Theme;
@@ -15,6 +25,7 @@ interface HeaderProps {
     initialProjectName: string;
     onSaveProject?: () => void;
     setNewProjectName?: (name: string) => void;
+    onAddTemplate?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -27,7 +38,8 @@ const Header: React.FC<HeaderProps> = ({
     projectSlug,
     initialProjectName,
     onSaveProject,
-    setNewProjectName
+    setNewProjectName,
+    onAddTemplate
 }) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
     // const navigate = useNavigate();
@@ -35,11 +47,23 @@ const Header: React.FC<HeaderProps> = ({
     const [projectName, setProjectName] = useState(initialProjectName || 'Untitled');
     const [editingName, setEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const isOpenRef = useRef<HTMLDivElement>(null);
+
+    const menuItems: MenuItem[] = [
+        { label: "Add this template", icon: <BookDashed size={16} />, onClick: () => onAddTemplate?.() },
+        { label: "Save as...", icon: <Save size={16} />, shortcut: "Ctrl+Shift+S", onClick: () => console.log("Save As") },
+        // { label: "Autosave", icon: <Save size={16} />, divider: true },
+        { label: "History", icon: <History size={16} />, onClick: () => console.log("History") },
+    ];
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (sizeMenuRef.current && !sizeMenuRef.current.contains(event.target as Node)) {
                 setShowSizeMenu(false);
+            }
+            if (isOpenRef.current && !isOpenRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
             }
         };
 
@@ -89,7 +113,6 @@ const Header: React.FC<HeaderProps> = ({
         }
         await ProjectService.updateProject(projectSlug, { name: projectName });
     };
-
     return (
         <header className={`p-4 flex items-center justify-between ${themeClasses.bg}`}>
             <div className="flex items-center gap-4">
@@ -142,6 +165,41 @@ const Header: React.FC<HeaderProps> = ({
 
                     <div className={`w-px h-8 ${themeClasses.divider}`}></div>
 
+                    <div ref={isOpenRef} className="relative">
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center gap-2"
+                        >
+                            <File size={16} />
+                            <span>File</span>
+                        </button>
+
+                        {isOpen && (
+                            <div className="absolute left-0 top-full mt-1 w-56 bg-white shadow-lg rounded-md py-1 z-10 border border-gray-200">
+                                {menuItems.map((item, index) => (
+                                    <React.Fragment key={index}>
+                                        {item.divider && index > 0 && <div className="border-t border-gray-200 my-1" />}
+                                        <button
+                                            onClick={() => {
+                                                item.onClick?.();
+                                                setIsOpen(false);
+                                            }}
+                                            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {item.icon}
+                                                <span>{item.label}</span>
+                                            </div>
+                                            {item.shortcut && <span className="text-xs text-gray-500">{item.shortcut}</span>}
+                                        </button>
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`w-px h-8 ${themeClasses.divider}`}></div>
+
                     <Link
                         to="/projects"
                         onClick={(e) => {
@@ -150,8 +208,8 @@ const Header: React.FC<HeaderProps> = ({
                             }
                         }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                            ? 'text-gray-700 hover:bg-gray-200'
+                            : 'text-gray-300 hover:bg-gray-700'
                             }`}
                         title="Open Projects"
                     >
