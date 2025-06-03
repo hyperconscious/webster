@@ -12,12 +12,15 @@ import ProjectService from '../services/ProjectService';
 import { notifyError, notifySuccess } from '../utils/notification';
 import Konva from 'konva';
 import HistoryModal from '../components/HistoryModal';
+import { jsPDF } from 'jspdf';
+
 interface IHistoryItem {
     id: string;
     timestamp: Date;
     action: string;
     snapshot: any;
 }
+
 interface EditorPageProps {
     theme: Theme;
     setTheme: (theme: Theme) => void;
@@ -247,6 +250,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
             // navigate(`/projects/${response.slug}`);
             notifySuccess("Template added successfully!");
         } catch (error) {
+            console.error("Export error: " + error);
             notifyError('Failed to create templatre. Please try again.');
         }
     }
@@ -259,6 +263,156 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
 
         return () => clearInterval(autosaveInterval);
     }, [isProject, layers, canvasWidth, canvasHeight, theme, projectName, history]);
+
+    const exportAsPNG = () => {
+        try {
+            const stage = layers[0].canvas.getStage();
+            if (!stage) return;
+
+            const dataURL = stage.toDataURL();
+            const link = document.createElement('a');
+            link.download = `${projectName}.png`;
+            link.href = dataURL;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            notifySuccess('Image exported as PNG successfully!');
+        } catch (error) {
+            console.error("Export error: " + error);
+            notifyError('Failed to export as PNG');
+        }
+    };
+
+    const exportAsJPEG = () => {
+        try {
+            const stage = layers[0].canvas.getStage();
+            if (!stage) return;
+
+            // Create a temporary layer for the white background
+            const tempLayer = new Konva.Layer();
+            const background = new Konva.Rect({
+                x: 0,
+                y: 0,
+                width: canvasWidth,
+                height: canvasHeight,
+                fill: 'white'
+            });
+            tempLayer.add(background);
+            stage.add(tempLayer);
+            tempLayer.moveToBottom();
+
+            const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: 0.8 });
+            
+            // Remove the temporary layer
+            tempLayer.destroy();
+
+            const link = document.createElement('a');
+            link.download = `${projectName}.jpg`;
+            link.href = dataURL;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            notifySuccess('Image exported as JPEG successfully!');
+        } catch (error) {
+            console.error("Export error: " + error);
+            notifyError('Failed to export as JPEG');
+        }
+    };
+
+    const exportAsSVG = () => {
+        try {
+            const stage = layers[0].canvas.getStage();
+            if (!stage) return;
+
+            // Create a temporary stage for merging all visible layers
+            const tempStage = new Konva.Stage({
+                container: document.createElement('div'),
+                width: canvasWidth,
+                height: canvasHeight
+            });
+
+            // Add all visible layers to the temporary stage
+            layers.forEach(layer => {
+                if (layer.visible) {
+                    const tempLayer = new Konva.Layer();
+                    const group = new Konva.Group({
+                        opacity: layer.opacity
+                    });
+                    layer.canvas.getChildren().forEach((child: any) => {
+                        group.add(child.clone());
+                    });
+                    tempLayer.add(group);
+                    tempStage.add(tempLayer);
+                }
+            });
+
+            // Export to PNG first
+            const dataUrl = tempStage.toDataURL();
+            
+            // Create an image element
+            const img = new Image();
+            img.onload = () => {
+                // Create a canvas to draw the image
+                const canvas = document.createElement('canvas');
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                const ctx = canvas.getContext('2d');
+                
+                if (!ctx) {
+                    throw new Error('Could not get canvas context');
+                }
+
+                // Draw the image on the canvas
+                ctx.drawImage(img, 0, 0);
+
+                // Convert to SVG using a data URL
+                const svgString = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}">
+    <image href="${dataUrl}" width="${canvasWidth}" height="${canvasHeight}"/>
+</svg>`;
+
+                const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `${projectName}.svg`;
+                link.href = url;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                // Clean up
+                tempStage.destroy();
+                canvas.remove();
+            };
+            img.src = dataUrl;
+            
+            notifySuccess('Image exported as SVG successfully!');
+        } catch (error) {
+            console.error("Export error: " + error);
+            notifyError('Failed to export as SVG');
+        }
+    };
+
+    const exportAsPDF = async () => {
+        try {
+            const stage = layers[0].canvas.getStage();
+            if (!stage) return;
+
+            const dataURL = stage.toDataURL();
+            const pdf = new jsPDF({
+                orientation: canvasWidth > canvasHeight ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [canvasWidth, canvasHeight]
+            });
+
+            pdf.addImage(dataURL, 'PNG', 0, 0, canvasWidth, canvasHeight);
+            pdf.save(`${projectName}.pdf`);
+            notifySuccess('Image exported as PDF successfully!');
+        } catch (error) {
+            notifyError('Failed to export as PDF');
+        }
+    };
 
     return (
         isLoading ? (
@@ -281,6 +435,10 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                         setNewProjectName={setProjectName}
                         onAddTemplate={handleAddTemplate}
                         setShowHistoryModal={setShowHistoryModal}
+                        onExportPNG={exportAsPNG}
+                        onExportJPEG={exportAsJPEG}
+                        onExportSVG={exportAsSVG}
+                        onExportPDF={exportAsPDF}
                     />
                     <ToolPanel
                         currentTool={settings.tool}

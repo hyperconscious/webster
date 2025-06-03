@@ -3,8 +3,6 @@ import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen, File, History
 import type { Theme, CanvasSize } from '../types';
 import { Link } from 'react-router-dom';
 import ProjectService from '../services/ProjectService';
-import { notifyError } from '../utils/notification';
-import { v4 as uuidv4 } from 'uuid';
 
 interface MenuItem {
     label: string;
@@ -27,6 +25,10 @@ interface HeaderProps {
     setNewProjectName?: (name: string) => void;
     onAddTemplate?: () => void;
     setShowHistoryModal?: (show: boolean) => void;
+    onExportPNG?: () => void;
+    onExportJPEG?: () => void;
+    onExportSVG?: () => void;
+    onExportPDF?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -41,7 +43,11 @@ const Header: React.FC<HeaderProps> = ({
     onSaveProject,
     setNewProjectName,
     onAddTemplate,
-    setShowHistoryModal
+    setShowHistoryModal,
+    onExportPNG,
+    onExportJPEG,
+    onExportSVG,
+    onExportPDF
 }) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
     // const navigate = useNavigate();
@@ -55,8 +61,11 @@ const Header: React.FC<HeaderProps> = ({
     const menuItems: MenuItem[] = [
         { label: "Add this template", icon: <BookDashed size={16} />, onClick: () => onAddTemplate?.() },
         { label: "Save as...", icon: <Save size={16} />, shortcut: "Ctrl+Shift+S", onClick: () => console.log("Save As") },
-        // { label: "Autosave", icon: <Save size={16} />, divider: true },
         { label: "History", icon: <History size={16} />, onClick: () => setShowHistoryModal?.(true) },
+        { label: "Export as PNG", icon: <File size={16} />, divider: true, onClick: () => onExportPNG?.() },
+        { label: "Export as JPEG", icon: <File size={16} />, onClick: () => onExportJPEG?.() },
+        { label: "Export as SVG", icon: <File size={16} />, onClick: () => onExportSVG?.() },
+        { label: "Export as PDF", icon: <File size={16} />, onClick: () => onExportPDF?.() },
     ];
 
     useEffect(() => {
