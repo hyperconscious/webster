@@ -302,7 +302,6 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
             tempLayer.moveToBottom();
 
             const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: 0.8 });
-            
             // Remove the temporary layer
             tempLayer.destroy();
 
@@ -348,7 +347,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
 
             // Export to PNG first
             const dataUrl = tempStage.toDataURL();
-            
+
             // Create an image element
             const img = new Image();
             img.onload = () => {
@@ -357,7 +356,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
                 const ctx = canvas.getContext('2d');
-                
+
                 if (!ctx) {
                     throw new Error('Could not get canvas context');
                 }
@@ -386,7 +385,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                 canvas.remove();
             };
             img.src = dataUrl;
-            
+
             notifySuccess('Image exported as SVG successfully!');
         } catch (error) {
             console.error("Export error: " + error);
