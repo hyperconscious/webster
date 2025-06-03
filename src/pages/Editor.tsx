@@ -6,12 +6,18 @@ import ColorPicker from '../components/ColorPicker';
 import Header from '../components/Header';
 import { useLayers } from '../hooks/useLayers';
 import { useCanvas } from '../hooks/useCanvas';
-import { type Theme, PRESET_SIZES } from '../types';
+import { type HistoryItem, type Theme, PRESET_SIZES } from '../types';
 import { useParams } from 'react-router-dom';
 import ProjectService from '../services/ProjectService';
 import { notifyError, notifySuccess } from '../utils/notification';
 import Konva from 'konva';
-
+import HistoryModal from '../components/HistoryModal';
+interface IHistoryItem {
+    id: string;
+    timestamp: Date;
+    action: string;
+    snapshot: any;
+}
 interface EditorPageProps {
     theme: Theme;
     setTheme: (theme: Theme) => void;
@@ -27,6 +33,8 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
     const [showLeftSidebar, setShowLeftSidebar] = useState(true);
     const [showRightSidebar, setShowRightSidebar] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
+    const [history, setHistory] = useState<IHistoryItem[]>([]);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
 
 
     useEffect(() => {
@@ -50,7 +58,6 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                         canvasJSON: layerData.canvasJSON
                     }));
 
-                    setHistory([{ layers: restoredLayers }]);
                     setCurrentStep(0);
                     setLayers(restoredLayers);
                 } catch (error) {
@@ -69,6 +76,18 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
         loadProject();
     }, [slug, projectName]);
 
+    const addHistoryItem = (action: string, snapshot: any) => {
+        setHistory(prev => [
+            {
+                id: Date.now().toString(),
+                timestamp: new Date(),
+                action,
+                snapshot
+            },
+            ...prev
+        ].slice(0, 50))
+    };
+
     const {
         layers,
         activeLayerIndex,
@@ -85,9 +104,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
         canUndo,
         canRedo,
         createHistorySnapshot,
-        setHistory,
         setCurrentStep,
-        history
     } = useLayers(canvasWidth, canvasHeight);
 
     const {
@@ -105,8 +122,11 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
         canvasHeight,
         activeLayer,
         createHistorySnapshot,
+        addHistoryItem,
         layers
     });
+
+
 
     const getThemeClasses = () => {
         switch (theme) {
@@ -122,18 +142,32 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
     const handleSizeChange = (width: number, height: number) => {
         setCanvasWidth(width);
         setCanvasHeight(height);
+        const snapshot = {
+            width: canvasWidth,
+            height: canvasHeight,
+            layers: layers.map(layer => ({
+                ...layer,
+                canvasJSON: layer.canvas.toJSON()
+            })),
+            timestamp: new Date()
+        };
+
+        addHistoryItem(`Canvas Change(${width} x ${height})`, snapshot);
     };
 
     const handleSaveProject = async () => {
         try {
-            createHistorySnapshot(layers);
-            const lastHistoryItem = history[history.length - 1];
-
+            const polotno = {
+                layers: layers.map(layer => ({
+                    ...layer,
+                    canvasJSON: JSON.parse(JSON.stringify(layer.canvas.toObject()))
+                }))
+            };
             const projectData = {
                 width: canvasWidth,
                 height: canvasHeight,
                 theme,
-                layers: lastHistoryItem.layers.map(layer => ({
+                layers: polotno.layers.map(layer => ({
                     ...layer,
                     canvasJSON: typeof layer.canvasJSON === 'string'
                         ? JSON.parse(layer.canvasJSON)
@@ -159,6 +193,22 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
         }
     };
 
+    const revertToSnapshot = (snapshot: any) => {
+        setCanvasWidth(snapshot.width || canvasWidth);
+        setCanvasHeight(snapshot.height || canvasHeight);
+
+        const restoredLayers = snapshot.layers.map((layerData: any) => ({
+            ...layerData,
+            canvas: Konva.Node.create(layerData.canvasJSON) as Konva.Layer,
+            canvasJSON: layerData.canvasJSON
+        }));
+        setLayers(restoredLayers);
+
+        setShowHistoryModal(false);
+
+        notifySuccess(`State was been revert to ${new Date(snapshot.timestamp).toLocaleString()}`);
+    };
+
 
     const handleAddTemplate = async () => {
         if (!isProject) {
@@ -166,14 +216,18 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
             return;
         }
         try {
-            createHistorySnapshot(layers);
-            const lastHistoryItem = history[history.length - 1];
+            const polotno = {
+                layers: layers.map(layer => ({
+                    ...layer,
+                    canvasJSON: JSON.parse(JSON.stringify(layer.canvas.toObject()))
+                }))
+            };
 
             const projectData = {
                 width: canvasWidth,
                 height: canvasHeight,
                 theme,
-                layers: lastHistoryItem.layers.map(layer => ({
+                layers: polotno.layers.map(layer => ({
                     ...layer,
                     canvasJSON: typeof layer.canvasJSON === 'string'
                         ? JSON.parse(layer.canvasJSON)
@@ -226,6 +280,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                         initialProjectName={projectName}
                         setNewProjectName={setProjectName}
                         onAddTemplate={handleAddTemplate}
+                        setShowHistoryModal={setShowHistoryModal}
                     />
                     <ToolPanel
                         currentTool={settings.tool}
@@ -365,6 +420,13 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                         />
                     </div>
                 </div>
+                <HistoryModal
+                    isOpen={showHistoryModal}
+                    onClose={() => setShowHistoryModal(false)}
+                    history={history}
+                    onRevert={revertToSnapshot}
+                    theme={theme}
+                />
             </div>
         )
     );

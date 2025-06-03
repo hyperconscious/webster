@@ -188,13 +188,14 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ theme, setTheme }) => {
                                         Use Template
                                     </button>
                                 }
-                                <button
+                                {view === 'projects' && <button
                                     onClick={() => duplicateProject(project)}
                                     className={`p-2 rounded-lg transition-colors ${themeClasses.button}`}
                                     title="Duplicate Project"
                                 >
-                                    <Copy size={16} />
+                                    <Copy size={22} />
                                 </button>
+                                }
                                 <button
                                     onClick={() => {
                                         if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
@@ -204,7 +205,7 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ theme, setTheme }) => {
                                     className={`p-2 rounded-lg transition-colors ${themeClasses.button}`}
                                     title="Delete Project"
                                 >
-                                    <Trash2 size={16} />
+                                    <Trash2 size={22} />
                                 </button>
                             </div>
                         </div>
@@ -212,22 +213,24 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ theme, setTheme }) => {
                 </div>
             )}
 
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-8">
-                    {Array.from({ length: totalPages }, (_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setPage(i + 1)}
-                            className={`px-4 py-2 rounded-lg transition-colors ${page === i + 1
-                                ? 'bg-blue-600 text-white'
-                                : `${themeClasses.button}`
-                                }`}
-                        >
-                            {i + 1}
-                        </button>
-                    ))}
-                </div>
-            )}
+            {
+                totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-8">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setPage(i + 1)}
+                                className={`px-4 py-2 rounded-lg transition-colors ${page === i + 1
+                                    ? 'bg-blue-600 text-white'
+                                    : `${themeClasses.button}`
+                                    }`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                    </div>
+                )
+            }
         </>
     );
 

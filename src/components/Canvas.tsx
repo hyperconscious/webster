@@ -45,7 +45,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
         const mergedLayer = new Konva.Layer({ id: 'merged-layer' });
         const mergedLayer2 = new Konva.Layer({ id: 'merged-layer2' });
-        
+
         const activeLayerIndex = layers.indexOf(activeLayer);
         layers.slice(activeLayerIndex + 1, layers.length).reverse().forEach(layer => {
             if (layer.visible && layer.canvas !== activeLayer.canvas) {

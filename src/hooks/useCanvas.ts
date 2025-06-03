@@ -7,14 +7,14 @@ interface UseCanvasProps {
     canvasHeight: number;
     activeLayer: Layer | null;
     createHistorySnapshot: (layers: Layer[]) => void;
+    addHistoryItem: (action: string, snapshot: any) => void;
     layers: Layer[];
 }
 
 export const useCanvas = ({
-    canvasWidth,
-    canvasHeight,
     activeLayer,
     createHistorySnapshot,
+    addHistoryItem,
     layers
 }: UseCanvasProps) => {
     const [isDrawing, setIsDrawing] = useState(false);
@@ -171,7 +171,26 @@ export const useCanvas = ({
     const stopDrawing = useCallback(() => {
         if (isDrawing && activeLayer) {
             createHistorySnapshot(layers);
+            const updatedLayers = layers.map(layer => {
+                if (layer.id === activeLayer.id) {
+                    return {
+                        ...layer,
+                        canvasJSON: layer.canvas.toJSON()
+                    };
+                }
+                return layer;
+            });
+
+            const snapshot = {
+                layers: updatedLayers,
+                timestamp: new Date(),
+                settings: { ...settings }
+            };
+
+            addHistoryItem(`Draw ${settings.tool}, ${settings.pattern}, ${settings.color}`, snapshot);
+
             setIsDrawing(false);
+            activeLayer.canvas.batchDraw();
         }
     }, [isDrawing, activeLayer, createHistorySnapshot, layers]);
 

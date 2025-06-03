@@ -26,6 +26,7 @@ interface HeaderProps {
     onSaveProject?: () => void;
     setNewProjectName?: (name: string) => void;
     onAddTemplate?: () => void;
+    setShowHistoryModal?: (show: boolean) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -39,7 +40,8 @@ const Header: React.FC<HeaderProps> = ({
     initialProjectName,
     onSaveProject,
     setNewProjectName,
-    onAddTemplate
+    onAddTemplate,
+    setShowHistoryModal
 }) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
     // const navigate = useNavigate();
@@ -54,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({
         { label: "Add this template", icon: <BookDashed size={16} />, onClick: () => onAddTemplate?.() },
         { label: "Save as...", icon: <Save size={16} />, shortcut: "Ctrl+Shift+S", onClick: () => console.log("Save As") },
         // { label: "Autosave", icon: <Save size={16} />, divider: true },
-        { label: "History", icon: <History size={16} />, onClick: () => console.log("History") },
+        { label: "History", icon: <History size={16} />, onClick: () => setShowHistoryModal?.(true) },
     ];
 
     useEffect(() => {
@@ -111,6 +113,7 @@ const Header: React.FC<HeaderProps> = ({
         if (!projectSlug) {
             return;
         }
+        onSaveProject?.();
         await ProjectService.updateProject(projectSlug, { name: projectName });
     };
     return (

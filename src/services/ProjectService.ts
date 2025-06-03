@@ -25,7 +25,6 @@ class ProjectService {
     }
 
     static async createProject(projectData: Partial<Project>): Promise<Project> {
-        console.log('Creating project with data:', projectData);
         const response = await axios.post('/api/projects', projectData);
         return response.data;
     }
