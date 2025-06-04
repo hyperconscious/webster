@@ -713,7 +713,7 @@ export const useCanvas = ({
     }
 
     const eyedropper = useCallback((point: Point) => {
-        const stage = activeLayers[0]?.canvas.getStage();
+        const stage = (layers.find(l => l.visible)?.canvas.getStage()) ?? null;
         if (!stage) return;
 
         const dataURL = stage.toDataURL();
@@ -728,7 +728,7 @@ export const useCanvas = ({
             const imageData = ctx.getImageData(point.x, point.y, 1, 1).data;
             let hex = '';
             if (imageData[0] == 0 && imageData[1] == 0 && imageData[2] == 0 && imageData[3] == 0) {
-                const container = activeLayers[0].canvas.getStage()?.container();
+                const container = stage.container();
                 const bgColor = getComputedStyle(container).backgroundColor;
                 const colorRgb = bgColor.replace(/rgba?\((\d+), (\d+), (\d+)\)/, '$1,$2,$3').split(',').map(Number);
                 hex = rgbToHex(colorRgb[0], colorRgb[1], colorRgb[2]);

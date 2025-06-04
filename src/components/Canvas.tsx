@@ -3,7 +3,6 @@ import type { Point, ShapeTool, Theme } from '../types';
 import Konva from 'konva';
 import { Stage } from 'react-konva';
 import type { Layer } from '../types';
-import { object } from 'joi';
 import { ZoomIn, ZoomOut, MousePointer, Share2, Clipboard, Loader } from 'lucide-react';
 import config from '../config/env.config';
 import { notifyError, notifySuccess } from '../utils/notification';
