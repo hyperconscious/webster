@@ -1,10 +1,6 @@
-export interface IEventFilters {
-    format?: string;
-    themes?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    startDate?: Date;
-    endDate?: Date;
+export interface IProjectFilters {
+    name?: string;
+    isTemplate?: boolean;
 }
 
 export interface EventSortOption {
@@ -22,7 +18,7 @@ export interface QueryOptions {
     limit?: number;
     sortField?: string;
     sortDirection?: 'ASC' | 'DESC';
-    filters?: IEventFilters;
+    filters?: IProjectFilters;
     search?: string;
 }
 

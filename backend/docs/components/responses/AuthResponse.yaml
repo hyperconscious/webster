@@ -1,0 +1,10 @@
+description: Authentication response
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        accessToken:
+          $ref: "../schemas/AccessToken.yaml"
+        refreshToken:
+          $ref: "../schemas/AccessToken.yaml"

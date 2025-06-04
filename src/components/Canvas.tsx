@@ -1,10 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { Point, ShapeTool, Theme } from '../types';
-import { ZoomIn, ZoomOut, MousePointer } from 'lucide-react';
 import Konva from 'konva';
 import { Stage } from 'react-konva';
 import type { Layer } from '../types';
 import { object } from 'joi';
+import { ZoomIn, ZoomOut, MousePointer, Share2, Clipboard, Loader } from 'lucide-react';
+import config from '../config/env.config';
+import { notifyError, notifySuccess } from '../utils/notification';
 
 interface CanvasProps {
     width: number;
@@ -72,6 +74,8 @@ const Canvas: React.FC<CanvasProps> = ({
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [showZoomControls, setShowZoomControls] = useState(false);
     const stageContainerRef = useRef<HTMLDivElement>(null);
+    const [showShareDropdown, setShowShareDropdown] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     const renderLayers = () => {
         if (!canvasRef.current || !containerRef.current) return;
@@ -120,6 +124,66 @@ const Canvas: React.FC<CanvasProps> = ({
             delShape();
         }
     }
+    const uploadImageToImgBB = async (): Promise<string | null> => {
+        if (!canvasRef.current) return null;
+
+        setIsUploading(true);
+        try {
+            const dataUrl = canvasRef.current.toDataURL({
+                pixelRatio: 2
+            });
+
+            const formData = new FormData();
+            formData.append('image', dataUrl.replace(/^data:image\/png;base64,/, ''));
+
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${config.IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const json = await res.json();
+
+            if (json.success) {
+                const url = json.data.url;
+                return url;
+            } else {
+                notifyError('Error uploading image: ' + json.error.message);
+                return null;
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            notifyError('Error uploading image. Please try again.');
+            return null;
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleShare = async () => {
+        let urlToShare = await uploadImageToImgBB();
+
+        if (!urlToShare) return;
+
+        setShowShareDropdown(!showShareDropdown);
+    };
+
+    const copyToClipboard = async () => {
+        const urlToShare = await uploadImageToImgBB();
+        if (!urlToShare) return;
+
+        await navigator.clipboard.writeText(urlToShare);
+        notifySuccess('Image link copied to clipboard!');
+    };
+
+    const handleSocialShare = async (platform: string) => {
+        let urlToShare = await uploadImageToImgBB();
+        if (!urlToShare) return;
+
+        if (urlToShare !== '#') {
+            window.open(getShareUrl(platform, urlToShare), '_blank');
+        }
+        setShowShareDropdown(false);
+    };
 
     const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
         const evt = e.evt;
@@ -192,12 +256,13 @@ const Canvas: React.FC<CanvasProps> = ({
         if (settings.tool === 'select') {
             const point = screenToCanvas(e.evt.clientX, e.evt.clientY);
             textEdit(point, e);
+            return;
         }
+        renderLayers();
+        setShowZoomControls(false);
     };
 
     const handleWheel = (e: React.WheelEvent) => {
-        //e.preventDefault();
-
         const zoomIntensity = 0.1;
         const delta = e.deltaY < 0 ? zoomIntensity : -zoomIntensity;
         const newScale = Math.max(0.1, Math.min(5, scale + delta));
@@ -234,6 +299,24 @@ const Canvas: React.FC<CanvasProps> = ({
         }
     };
 
+    const getShareUrl = (platform: string, shareUrl: string) => {
+
+        const encodedUrl = encodeURIComponent(shareUrl);
+        const text = encodeURIComponent('Check out my artwork!');
+
+        switch (platform) {
+            case 'telegram':
+                return `https://telegram.me/share/url?url=${encodedUrl}&text=${text}`;
+            case 'facebook':
+                return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+            case 'twitter':
+                return `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${text}`;
+
+            default:
+                return '#';
+        }
+    };
+
     const getThemeClasses = () => {
         switch (theme) {
             case 'light':
@@ -256,13 +339,24 @@ const Canvas: React.FC<CanvasProps> = ({
         }
     };
 
+    const getDropdownThemeClasses = () => {
+        switch (theme) {
+            case 'light':
+                return 'bg-white text-gray-900 border border-gray-400 shadow-lg';
+            case 'blue':
+                return 'bg-blue-900 text-white border border-blue-800 shadow-blue-900/50';
+            default:
+                return 'bg-gray-900 text-white border border-gray-800 shadow-black/50';
+        }
+    };
+
     return (
         <div
             ref={containerRef}
             className={`relative overflow-hidden ${getThemeClasses()} h-full w-full cursor-crosshair`}
             onWheel={handleWheel}
             onMouseEnter={() => setShowZoomControls(true)}
-            onMouseLeave={() => setShowZoomControls(false)}
+            onMouseLeave={handleMouseLeave}
         >
             <div
                 className="absolute transform origin-top-left"
@@ -311,12 +405,69 @@ const Canvas: React.FC<CanvasProps> = ({
                     >
                         <ZoomIn size={16} />
                     </button>
+                    <div className="h-4 w-px bg-gray-700" />
+                    <button
+                        onClick={copyToClipboard}
+                        className="hover:text-blue-500 transition-colors flex items-center gap-1"
+                        title="Copy image link to clipboard"
+                        disabled={isUploading}
+                    >
+                        {isUploading ? <Loader size={16} className="animate-spin" /> : <Clipboard size={16} />}
+                        <span>Copy link</span>
+                    </button>
                 </div>
                 <div className="h-4 w-px bg-gray-700" />
                 <span className="capitalize">{settings.tool}</span>
                 <span>•</span>
                 <span>{settings.lineWidth}px</span>
+                <div className="h-4 w-px bg-gray-700" />
+                <div className="relative">
+                    <button
+                        onClick={handleShare}
+                        className="flex items-center gap-1 hover:text-blue-500 transition-colors"
+                        disabled={isUploading}
+                    >
+                        {isUploading ? <Loader size={16} className="animate-spin" /> : <Share2 size={16} />}
+                        <span>Share</span>
+                    </button>
+                    {showShareDropdown && (
+                        <div className={`absolute bottom-full mb-2 left-0 ${getDropdownThemeClasses()} rounded-lg p-2 min-w-[120px] z-50`}>
+                            <button
+                                onClick={() => handleSocialShare('telegram')}
+                                className="block w-full text-left px-3 py-2 rounded hover:bg-blue-500 hover:text-white transition-colors"
+                            >
+                                Telegram
+                            </button>
+                            {/* <button
+                                onClick={() => handleSocialShare('instagram')}
+                                className="block w-full text-left px-3 py-2 rounded hover:bg-blue-500 hover:text-white transition-colors"
+                            >
+                                Instagram
+                            </button> */}
+                            <button
+                                onClick={() => handleSocialShare('facebook')}
+                                className="block w-full text-left px-3 py-2 rounded hover:bg-blue-500 hover:text-white transition-colors"
+                            >
+                                Facebook
+                            </button>
+                            <button
+                                onClick={() => handleSocialShare('twitter')}
+                                className="block w-full text-left px-3 py-2 rounded hover:bg-blue-500 hover:text-white transition-colors"
+                            >
+                                Twitter
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* Overlay to close dropdown when clicking outside */}
+            {showShareDropdown && (
+                <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowShareDropdown(false)}
+                />
+            )}
         </div>
     );
 };

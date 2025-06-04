@@ -1,5 +1,5 @@
 import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
-import { joiResolver } from '@hookform/resolvers/joi';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { type RegisterData, registerSchema } from '../../validation/schemas';
 import InputField from '../../components/InputField';
 import AuthService from '../../services/AuthService';
@@ -54,7 +54,7 @@ function Register() {
         formState: { errors },
         control,
     } = useForm<RegisterData>({
-        resolver: joiResolver(registerSchema),
+        resolver: zodResolver(registerSchema),
     });
 
     const onSubmit: SubmitHandler<RegisterData> = async (data) => {

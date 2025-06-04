@@ -1,0 +1,44 @@
+Company:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Sample Company"
+        email:
+          type: string
+          format: email
+          example: "example@gmail.com"
+        locationLatitude:
+          type: number
+          example: 40.7128
+        locationLongitude:
+          type: number
+          example: -74.0060
+        locationDescription:
+          type: string
+          example: "New York, NY"
+        locationAddress:
+          type: string
+          example: "123 Main St, New York, NY 10001"
+        picture:
+          type: string
+          example: "company.jpg"
+        banner:
+          type: string
+          example: "banner.jpg"
+        owner:
+          $ref: "./user.yaml#/User"
+        phoneNumber:
+          type: string
+          example: "+1234567890"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"

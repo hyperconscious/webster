@@ -10,9 +10,10 @@ import {
     Square,
     Type,
     Image,
-    Scissors,
     Pipette,
-    MousePointer
+    MousePointer,
+    PanelLeft,
+    PanelRight,
 } from 'lucide-react';
 
 interface ToolPanelProps {
@@ -25,6 +26,10 @@ interface ToolPanelProps {
     theme: Theme;
     showShapesPanel: boolean;
     setShowShapesPanel: (show: boolean) => void;
+    showLeftSidebar: boolean;
+    setShowLeftSidebar: (show: boolean) => void;
+    showRightSidebar: boolean;
+    setShowRightSidebar: (show: boolean) => void;
 }
 
 interface ToolButton {
@@ -42,7 +47,11 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
     onRedo,
     theme,
     showShapesPanel,
-    setShowShapesPanel
+    setShowShapesPanel,
+    showLeftSidebar,
+    setShowLeftSidebar,
+    showRightSidebar,
+    setShowRightSidebar
 }) => {
     const tools: ToolButton[] = [
         { id: 'select', icon: <MousePointer size={20} />, label: 'Select' },
@@ -86,52 +95,74 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
     const themeClasses = getThemeClasses();
 
     return (
-        <div className={`${themeClasses.toolbar} border-b p-2 flex items-center gap-4`}>
-            <div className="flex items-center gap-2">
-                <button
-                    className={`p-2 rounded-lg transition-colors ${canUndo ? themeClasses.tool : 'opacity-50 cursor-not-allowed'
-                        }`}
-                    onClick={onUndo}
-                    disabled={!canUndo}
-                    title="Undo"
-                >
-                    <UndoIcon size={20} />
-                </button>
-                <button
-                    className={`p-2 rounded-lg transition-colors ${canRedo ? themeClasses.tool : 'opacity-50 cursor-not-allowed'
-                        }`}
-                    onClick={onRedo}
-                    disabled={!canRedo}
-                    title="Redo"
-                >
-                    <RedoIcon size={20} />
-                </button>
-            </div>
+        <div className={`flex items-center justify-between ${themeClasses.toolbar} border-b p-2 `}>
 
-            <div className={`w-px h-6 ${themeClasses.divider}`} />
+            <div className={`flex items-center gap-4`}>
+                <button
+                    onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+                    className={`p-2 rounded-lg transition-colors ${showLeftSidebar ? themeClasses.activeTool : themeClasses.tool
+                        }`}
+                    title="Toggle Properties Panel"
+                >
+                    <PanelLeft size={20} />
+                </button>
 
-            <div className="flex items-center gap-1">
-                {tools.map((tool) => (
+                <div className={`w-px h-6 ${themeClasses.divider}`} />
+
+                <div className="flex items-center gap-2">
                     <button
-                        key={tool.id}
-                        className={`p-2 rounded-lg transition-colors ${currentTool === tool.id
-                            ? themeClasses.activeTool
-                            : themeClasses.tool
+                        className={`p-2 rounded-lg transition-colors ${canUndo ? themeClasses.tool : 'opacity-50 cursor-not-allowed'
                             }`}
-                        onClick={() => {
-                            setTool(tool.id);
-                            if (tool.id === 'shapes') {
-                                setShowShapesPanel(true);
-                            } else {
-                                setShowShapesPanel(false);
-                            }
-                        }}
-                        title={tool.label}
+                        onClick={onUndo}
+                        disabled={!canUndo}
+                        title="Undo"
                     >
-                        {tool.icon}
+                        <UndoIcon size={20} />
                     </button>
-                ))}
+                    <button
+                        className={`p-2 rounded-lg transition-colors ${canRedo ? themeClasses.tool : 'opacity-50 cursor-not-allowed'
+                            }`}
+                        onClick={onRedo}
+                        disabled={!canRedo}
+                        title="Redo"
+                    >
+                        <RedoIcon size={20} />
+                    </button>
+                </div>
+
+                <div className={`w-px h-6 ${themeClasses.divider}`} />
+
+                <div className="flex items-center gap-1">
+                    {tools.map((tool) => (
+                        <button
+                            key={tool.id}
+                            className={`p-2 rounded-lg transition-colors ${currentTool === tool.id
+                                ? themeClasses.activeTool
+                                : themeClasses.tool
+                                }`}
+                            onClick={() => {
+                                setTool(tool.id);
+                                if (tool.id === 'shapes') {
+                                    setShowShapesPanel(true);
+                                } else {
+                                    setShowShapesPanel(false);
+                                }
+                            }}
+                            title={tool.label}
+                        >
+                            {tool.icon}
+                        </button>
+                    ))}
+                </div>
             </div>
+            <button
+                onClick={() => setShowRightSidebar(!showRightSidebar)}
+                className={`p-2 rounded-lg transition-colors ${showRightSidebar ? themeClasses.activeTool : themeClasses.tool
+                    }`}
+                title="Toggle Layers Panel"
+            >
+                <PanelRight size={20} />
+            </button>
         </div>
     );
 };

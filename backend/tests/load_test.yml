@@ -1,0 +1,55 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 50
+  http:
+    timeout: 30000
+
+scenarios:
+  - flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            loginOrEmail: "test"
+            password: "Aa123456"
+          capture:
+            json: "$.accessToken"
+            as: token
+
+      - think: 2
+
+      - get:
+          url: "/api/projects"
+          headers:
+            Authorization: "Bearer {{ token }}"
+
+      - think: 5
+
+      - post:
+          url: "/api/projects"
+          json:
+            name: "Test Project"
+            data: "This is a test project"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          capture:
+            json: "$.id"
+            as: projectId
+
+      - think: 5
+
+      - patch:
+          url: "/api/projects/{{ projectId }}"
+          json:
+            name: "Updated Test Project"
+            data: "This is an updated test project"
+          headers:
+            Authorization: "Bearer {{ token }}"
+
+      - think: 5
+
+      - delete:
+          url: "/api/projects/{{ projectId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"

@@ -1,0 +1,191 @@
+register:
+  post:
+    tags:
+      - Auth
+    summary: Register a new user
+    description: New user registration. After successful registration, the user is sent an email with a confirmation token.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              login:
+                type: string
+                example: "newUserLogin"
+              password:
+                type: string
+                example: "StrongPassword123"
+              passwordConfirmation:
+                type: string
+                example: "StrongPassword123"
+              full_name:
+                type: string
+                example: "John Doe"
+              email:
+                type: string
+                example: "newuser@example.com"
+
+    responses:
+      201:
+        $ref: "../components/responses/AuthResponse.yaml"
+      400:
+        $ref: "../components/responses/BadRequest.yaml"
+
+login:
+  post:
+    tags:
+      - Auth
+    summary: Login a user
+    description: User login with email verification. If email is not verified, an error will be returned.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              loginOrEmail:
+                type: string
+                example: "user@example.com"
+              password:
+                type: string
+                example: "UserPassword123"
+    responses:
+      200:
+        $ref: "../components/responses/AuthResponse.yaml"
+      400:
+        $ref: "../components/responses/BadRequest.yaml"
+      401:
+        $ref: "../components/responses/Unauthorized.yaml"
+
+refresh:
+  post:
+    tags:
+      - Auth
+    summary: Refresh the user's tokens
+    description: Update user tokens based on refresh token.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              refreshToken:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Niwicm9sZSI6InVzZXIiLCJpYXQiOjE3MzAwNjc4MjMsImV4cCI6MTczMDY3MjYyM30.lqtZbBjFE1jlj_FDUPbBfDrlSJc4V9NWEaBRXl4hjHk"
+    responses:
+      200:
+        $ref: "../components/responses/AuthResponse.yaml"
+      400:
+        $ref: "../components/responses/BadRequest.yaml"
+
+verify-email:
+  post:
+    tags:
+      - Auth
+    summary: Verify user email
+    description: User email confirmation. The user must follow the link in the email sent to their email after registration.
+    parameters:
+      - name: token
+        in: query
+        required: true
+        description: Token for email confirmation
+        schema:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiZW1haWwiOiJra2xpbmFldkBnbWFpbC5jb20iLCJpYXQiOjE3MzAwNzA1NzMsImV4cCI6MTczMDA3MDk5M30.r65j9ecPnrfAJAOw27GlFkg4npfqrSF1yCcYlqhpScU"
+    responses:
+      200:
+        description: Email verified successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Email verified successfully."
+      400:
+        $ref: "../components/responses/BadRequest.yaml"
+      401:
+        $ref: "../components/responses/Unauthorized.yaml"
+      404:
+        $ref: "../components/responses/NotFound.yaml"
+
+forgot-password:
+  post:
+    tags:
+      - Auth
+    summary: Initiate password reset process
+    description: Sends a password reset email to the specified email address if such a user exists.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                format: email
+                example: "user@example.com"
+    responses:
+      200:
+        description: Password reset email sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Password reset email sent successfully."
+      400:
+        $ref: "../components/responses/BadRequest.yaml"
+
+password-reset:
+  post:
+    tags:
+      - Auth
+    summary: Reset user password
+    description: Resets the user's password to a new one if a valid token is provided.
+    parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZXhwIjoxNzMwNzY3NzUyfQ.hJU5f6lJHtKdGcQ42X1FpQ"
+        description: Token from email to verify the password reset request.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              password:
+                type: string
+                example: "NewSecurePassword123"
+              passwordConfirmation:
+                type: string
+                example: "NewSecurePassword123"
+    responses:
+      200:
+        description: Password reset successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Password reset successfully."
+      400:
+        $ref: "../components/responses/BadRequest.yaml"
+      401:
+        $ref: "../components/responses/Unauthorized.yaml"
+      404:
+        $ref: "../components/responses/NotFound.yaml"

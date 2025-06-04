@@ -1,0 +1,172 @@
+openapi: 3.0.3
+info:
+  title: Uevent - Event Networking Platform
+  version: "1.0.0"
+  description: >
+    Uevent API helps users discover, subscribe to, and interact with entertaining and educational events.
+    The platform allows both registered and non-registered users to explore events by format, theme, or date.
+    Key features include event subscriptions, user comments, organizer profiles, and an integrated payment system.
+    Built using Node.js and React, the API supports event networking and real-time communication through a modern and intuitive interface.
+  contact:
+    email: "kklinaev@gmail.com"
+
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+tags:
+  - name: Auth
+    description: Operations related to user authentication and account management
+  - name: User
+    description: Operations related to user profiles and management
+  - name: Event
+    description: Operations related to event management and interaction
+  - name: Comment
+    description: Operations related to event comments and interactions
+  - name: Company
+    description: Operations related to company management and interaction
+  - name: Format
+    description: Operations related to event formats
+  - name: Theme
+    description: Operations related to event themes
+  - name: Notification
+    description: Operations related to user notifications
+
+paths:
+  #auth
+  /api/auth/register:
+    $ref: "./paths/auth.yaml#/register"
+  /api/auth/login:
+    $ref: "./paths/auth.yaml#/login"
+  /api/auth/refresh:
+    $ref: "./paths/auth.yaml#/refresh"
+  /api/auth/verify-email:
+    $ref: "./paths/auth.yaml#/verify-email"
+  /api/auth/forgot-password:
+    $ref: "./paths/auth.yaml#/forgot-password"
+  /api/auth/password-reset:
+    $ref: "./paths/auth.yaml#/password-reset"
+
+  #users
+  /api/users:
+    $ref: "./paths/users.yaml#/users"
+  /api/users/{id}:
+    $ref: "./paths/users.yaml#/user"
+  /api/users/my-profile:
+    $ref: "./paths/users.yaml#/my-profile"
+  /api/users/mail/{email}:
+    $ref: "./paths/users.yaml#/mail"
+  /api/users/{id}/attendedEvents:
+    $ref: "./paths/users.yaml#/attendedEvents"
+  /api/users/{id}/companies:
+    $ref: "./paths/users.yaml#/companies"
+  /api/users/{id}/participatedIn:
+    $ref: "./paths/users.yaml#/participatedIn"
+  /api/users/{id}/participation:
+    $ref: "./paths/users.yaml#/participation"
+
+  #events
+  /api/events:
+    $ref: "./paths/events.yaml#/events"
+  /events/{event_id}:
+    $ref: "./paths/events.yaml#/event"
+  /events/{event_id}/themes:
+    $ref: "./paths/events.yaml#/themes"
+  /events/{event_id}/comments:
+    $ref: "./paths/events.yaml#/comments"
+  /events/{event_id}/users:
+    $ref: "./paths/events.yaml#/users"
+  /events/{event_id}/promoCodes:
+    $ref: "./paths/events.yaml#/promoCodes"
+  /events/{event_id}/participants:
+    $ref: "./paths/events.yaml#/participants"
+  /events/{event_id}/attend:
+    $ref: "./paths/events.yaml#/attend"
+  /events/{event_id}/comment:
+    $ref: "./paths/events.yaml#/comment"
+
+  #comments
+  /api/comments:
+    $ref: "./paths/comments.yaml#/comments"
+  /api/comments/{comment_id}:
+    $ref: "./paths/comments.yaml#/comment"
+  /api/comments/{comment_id}/event:
+    $ref: "./paths/comments.yaml#/commentEvent"
+
+  #companies
+  /api/companies:
+    $ref: "./paths/companies.yaml#/companies"
+  /api/companies/{company_id}:
+    $ref: "./paths/companies.yaml#/company"
+  /api/companies/{company_id}/events:
+    $ref: "./paths/companies.yaml#/events"
+  /api/companies/{company_id}/banner:
+    $ref: "./paths/companies.yaml#/banner"
+  /api/companies/{company_id}/picture:
+    $ref: "./paths/companies.yaml#/picture"
+
+  #formats
+  /api/formats:
+    $ref: "./paths/formats.yaml#/formats"
+  /api/formats/{format_id}:
+    $ref: "./paths/formats.yaml#/format"
+
+  #themes
+  /api/themes:
+    $ref: "./paths/themes.yaml#/themes"
+  /api/themes/{theme_id}:
+    $ref: "./paths/themes.yaml#/theme"
+
+  #notifications
+  /api/notifications:
+    $ref: "./paths/notifications.yaml#/notifications"
+  /api/notifications/{notification_id}:
+    $ref: "./paths/notifications.yaml#/notification"
+  /api/notifications/{notification_id}/read:
+    $ref: "./paths/notifications.yaml#/read"
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: "./components/securitySchemes/BearerAuth.yaml#/BearerAuth"
+
+  responses:
+    BadRequest:
+      $ref: "./components/responses/BadRequest.yaml"
+
+
+    Unauthorized:
+      $ref: "./components/responses/Unauthorized.yaml"
+
+    Forbidden:
+      $ref: "./components/responses/Forbidden.yaml"
+
+    NotFound:
+      $ref: "./components/responses/NotFound.yaml"
+
+    AuthResponse:
+      $ref: "./components/responses/AuthResponse.yaml"
+  schemas:
+    AccessToken:
+      $ref: "./components/schemas/AccessToken.yaml"
+
+    RefreshToken:
+      $ref: "./components/schemas/AccessToken.yaml"
+
+    Event:
+      $ref: "./components/schemas/event.yaml#/Event"
+
+    User:
+      $ref: "./components/schemas/user.yaml#/User"
+
+    Company:
+      $ref: "./components/schemas/company.yaml#/Company"
+
+    Format:
+      $ref: "./components/schemas/format.yaml#/Format"
+
+    Theme:
+      $ref: "./components/schemas/theme.yaml#/Theme"
+
+

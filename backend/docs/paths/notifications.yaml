@@ -1,0 +1,138 @@
+notifications:
+  get:
+    tags:
+      - Notification
+    summary: Get all notifications
+    operationId: getAllNotifications
+    parameters:
+      - in: query
+        name: title
+        schema:
+          type: string
+          minLength: 1
+      - in: query
+        name: type
+        schema:
+          type: string
+          enum: [event_reminder, event_change, event_cancellation, event_invitation]
+      - in: query
+        name: isRead
+        schema:
+          type: boolean
+      - in: query
+        name: userId
+        schema:
+          type: integer
+          minimum: 1
+      - in: query
+        name: sortBy
+        schema:
+          type: string
+          enum: [createdAt, title, message, type]
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        description: Page number for pagination
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 10
+        description: Number of events per page
+    responses:
+      '200':
+        description: List of notifications
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/notification.yaml#/Notification'
+
+  post:
+    tags:
+      - Notification
+    summary: Create a new notification
+    operationId: createNotification
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/notification.yaml#/Notification'
+    responses:
+      '201':
+        description: Notification created
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/notification.yaml#/Notification'
+      '400':
+        description: Validation error
+
+notification:
+  get:
+    tags:
+      - Notification
+    summary: Get a notification by ID
+    operationId: getNotificationById
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Notification data
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/notification.yaml#/Notification'
+      '400':
+        description: Invalid ID
+      '404':
+        description: Notification not found
+
+  delete:
+    tags:
+      - Notification
+    summary: Delete a notification by ID
+    operationId: deleteNotification
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: Deleted successfully
+      '400':
+        description: Invalid ID
+
+read:
+  patch:
+    tags:
+      - Notification
+    summary: Mark a notification as read
+    operationId: markNotificationAsRead
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Notification marked as read
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/notification.yaml#/Notification'
+      '400':
+        description: Invalid ID
+      '404':
+        description: Notification not found

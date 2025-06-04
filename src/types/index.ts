@@ -97,3 +97,16 @@ export const PRESET_SIZES: CanvasSize[] = [
     { width: 1584, height: 396, label: 'LinkedIn Banner (1584×396)' },
     { width: 2560, height: 1440, label: 'Desktop Wallpaper 2K (2560×1440)' }
 ];
+
+export interface Project {
+    id: number;
+    slug: string;
+    name: string;
+    data: string;
+    isTemplate: boolean;
+    thumbnail: string;
+    description?: string;
+    userId: number;
+    createdAt: string;
+    updatedAt: string;
+}

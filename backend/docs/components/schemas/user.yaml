@@ -1,0 +1,39 @@
+User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        login:
+          type: string
+          minLength: 4
+          maxLength: 20
+          example: user123
+        password:
+          type: string
+          example: secretPassword123
+        full_name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        verified:
+          type: boolean
+          example: false
+        avatar:
+          type: string
+          example: avatar.jpg
+        role:
+          type: string
+          enum: [admin, user]
+          example: user
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"

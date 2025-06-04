@@ -43,7 +43,7 @@ export const useLayers = (width: number, height: number) => {
 
     const [activeLayerIndexes, setActiveLayerIndexes] = useState<number[]>([0]);
 
-    const { createHistorySnapshot, undo, redo, canUndo, canRedo } = useHistory(layers);
+    const { createHistorySnapshot, undo, redo, canUndo, canRedo, history, setHistory, setCurrentStep } = useHistory(layers);
 
     const addLayerForObject = useCallback((name: string = 'Layer', callback?: (newLayer: Layer) => void) => {
         const newLayer = createNewLayer(name, 'object');
@@ -141,30 +141,34 @@ export const useLayers = (width: number, height: number) => {
     }, [layers]);
 
     const handleUndo = useCallback(() => {
-        const previousLayers = undo();
-        if (previousLayers) {
-            previousLayers.forEach(layer => {
-                if (layer.canvasJSON) {
-                    layer.canvas = Konva.Node.create(layer.canvasJSON);
-                }
-            });
-            setLayers(previousLayers);
-            setActiveLayerIndexes([0]);
+        if (canUndo) {
+            const prevLayers = undo();
+            if (prevLayers) {
+                const restored = prevLayers.map(layer => ({
+                    ...layer,
+                    canvas: Konva.Node.create(layer.canvasJSON) as Konva.Layer,
+                    canvasJSON: layer.canvasJSON
+                }));
+                setLayers(restored);
+                setActiveLayerIndexes([Math.min(activeLayerIndexes[0], restored.length - 1)]);
+            }
         }
-    }, [undo, activeLayerIndexes]);
+    }, [undo, activeLayerIndexes, canUndo]);
 
     const handleRedo = useCallback(() => {
-        const nextLayers = redo();
-        if (nextLayers) {
-            nextLayers.forEach(layer => {
-                if (layer.canvasJSON) {
-                    layer.canvas = Konva.Node.create(layer.canvasJSON);
-                }
-            });
-            setLayers(nextLayers);
-            setActiveLayerIndexes([0]);
+        if (canRedo) {
+            const nextLayers = redo();
+            if (nextLayers) {
+                const restored = nextLayers.map(layer => ({
+                    ...layer,
+                    canvas: Konva.Node.create(layer.canvasJSON) as Konva.Layer,
+                    canvasJSON: layer.canvasJSON
+                }));
+                setLayers(restored);
+                setActiveLayerIndexes([Math.min(activeLayerIndexes[0], restored.length - 1)]);
+            }
         }
-    }, [redo, activeLayerIndexes]);
+    }, [redo, activeLayerIndexes, canRedo]);
 
     return {
         layers,
@@ -173,6 +177,7 @@ export const useLayers = (width: number, height: number) => {
         addLayer,
         addLayerForObject,
         removeLayer,
+        setLayers,
         toggleLayerVisibility,
         setLayerOpacity,
         moveLayer,
@@ -184,7 +189,9 @@ export const useLayers = (width: number, height: number) => {
         canUndo,
         canRedo,
         createHistorySnapshot,
-        setLayers,
-        transformerSelectLayer
+        transformerSelectLayer,
+        history,
+        setHistory,
+        setCurrentStep
     };
 };

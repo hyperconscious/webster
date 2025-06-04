@@ -6,7 +6,7 @@ export interface RegisterData {
   password: string;
   passwordConfirmation: string;
   countryCode: string;
-  full_name?: string;
+  full_name: string;
 }
 
 export interface LoginData {

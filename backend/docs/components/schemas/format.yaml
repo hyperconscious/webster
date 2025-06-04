@@ -1,0 +1,18 @@
+Format:
+  type: object
+  properties:
+    id:
+      type: string
+      description: Unique identifier for the format
+      example: "1"
+    name:
+      type: string
+      description: Name of the format
+      example: "Online"
+    description:
+      type: string
+      description: Description of the format
+      example: "An online event format"
+  required:
+    - id
+    - name

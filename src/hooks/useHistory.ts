@@ -2,24 +2,29 @@ import { useState, useCallback } from 'react';
 import type { HistoryItem, Layer } from '../types';
 
 export const useHistory = (initialLayers: Layer[]) => {
-    const [history, setHistory] = useState<HistoryItem[]>([{ layers: initialLayers }]);
-    const [currentStep, setCurrentStep] = useState<number>(0);
+    const [history, setHistory] = useState<HistoryItem[]>(() => {
+        const initialHistoryItem = {
+            layers: initialLayers.map(layer => ({
+                ...layer,
+                canvasJSON: JSON.parse(JSON.stringify(layer.canvas.toObject()))
+            }))
+        };
+        return [initialHistoryItem];
+    });
+
+    const [currentStep, setCurrentStep] = useState(0);
 
     const createHistorySnapshot = useCallback((layers: Layer[]) => {
-        const clonedLayers = layers.map(layer => {
-            const serilizedLayer = layer.canvas.toJSON();
-            return {
+        const newHistoryItem = {
+            layers: layers.map(layer => ({
                 ...layer,
-                canvasJSON: serilizedLayer
-            };
-        });
+                canvasJSON: JSON.parse(JSON.stringify(layer.canvas.toObject()))
+            }))
+        };
 
-        const newHistory = history.slice(0, currentStep + 1);
-        newHistory.push({ layers: clonedLayers });
-
-        setHistory(newHistory);
-        setCurrentStep(newHistory.length - 1);
-    }, [history, currentStep]);
+        setHistory(prev => [...prev.slice(0, currentStep + 1), newHistoryItem]);
+        setCurrentStep(prev => prev + 1);
+    }, [currentStep]);
 
     const undo = useCallback(() => {
         if (currentStep > 0) {
@@ -40,5 +45,14 @@ export const useHistory = (initialLayers: Layer[]) => {
     const canUndo = currentStep > 0;
     const canRedo = currentStep < history.length - 1;
 
-    return { createHistorySnapshot, undo, redo, canUndo, canRedo };
+    return {
+        history,
+        createHistorySnapshot,
+        undo,
+        redo,
+        canUndo,
+        canRedo,
+        setHistory,
+        setCurrentStep
+    };
 };

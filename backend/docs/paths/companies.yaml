@@ -1,0 +1,236 @@
+companies:
+  get:
+    tags:
+      - Company
+    summary: Get all companies
+    description: Retrieves a list of all companies, with optional filtering and sorting.
+    parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 10
+      - in: query
+        name: sortBy
+        schema:
+          type: string
+          enum: [name, createdAt]
+          default: createdAt
+      - in: query
+        name: name
+        schema:
+          type: string
+    responses:
+      200:
+        description: List of companies
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/company.yaml#/Company'
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+
+  post:
+    tags:
+      - Company
+    summary: Create a new company
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/company.yaml#/Company'
+    responses:
+      201:
+        description: Company created successfully
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+
+company:
+  get:
+    tags:
+      - Company
+    summary: Get company by ID
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Company found
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/company.yaml#/Company'
+      404:
+        $ref: '../components/responses/NotFound.yaml'
+
+  patch:
+    tags:
+      - Company
+    summary: Update company by ID
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/company.yaml#/Company'
+    responses:
+      200:
+        description: Company updated
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+      404:
+        $ref: '../components/responses/NotFound.yaml'
+
+  delete:
+    tags:
+      - Company
+    summary: Delete company by ID
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Company deleted successfully
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+      404:
+        $ref: '../components/responses/NotFound.yaml'
+
+events:
+  get:
+    tags:
+      - Company
+    summary: Get events for a company
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: List of company events
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/event.yaml#/Event'
+
+  post:
+    tags:
+      - Company
+    summary: Create an event for a company
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/event.yaml#/Event'
+    responses:
+      201:
+        description: Event created
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+
+banner:
+  patch:
+    tags:
+      - Company
+    summary: Update company banner
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+    responses:
+      200:
+        description: Banner updated successfully
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'
+
+picture:
+  patch:
+    tags:
+      - Company
+    summary: Update company picture
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+    responses:
+      200:
+        description: Picture updated successfully
+      400:
+        $ref: '../components/responses/BadRequest.yaml'
+      401:
+        $ref: '../components/responses/Unauthorized.yaml'

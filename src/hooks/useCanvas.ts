@@ -11,6 +11,7 @@ interface UseCanvasProps {
     activeLayerIndexes: number[];
     addLayerForObject: (name: string, callback?: (newLayer: Layer) => void) => void;
     createHistorySnapshot: (layers: Layer[]) => void;
+    addHistoryItem: (action: string, snapshot: any) => void;
     layers: Layer[];
     setLayers: (value: React.SetStateAction<Layer[]>) => void;
     transformerSelectLayer: Konva.Layer;
@@ -27,7 +28,8 @@ export const useCanvas = ({
     createHistorySnapshot,
     layers,
     setLayers,
-    transformerSelectLayer
+    transformerSelectLayer,
+    addHistoryItem
 }: UseCanvasProps) => {
     const [isDrawing, setIsDrawing] = useState(false);
     const [settings, setSettings] = useState<Settings>({
@@ -179,8 +181,27 @@ export const useCanvas = ({
     const stopDrawing = useCallback(() => {
         if (isDrawing && activeLayers) {
             createHistorySnapshot(layers);
+            const updatedLayers = layers.map(layer => {
+                if (layer.id === activeLayers[0].id) {
+                    return {
+                        ...layer,
+                        canvasJSON: layer.canvas.toJSON()
+                    };
+                }
+                return layer;
+            });
+
+            const snapshot = {
+                layers: updatedLayers,
+                timestamp: new Date(),
+                settings: { ...settings }
+            };
+
+            addHistoryItem(`Draw ${settings.tool}, ${settings.pattern}, ${settings.color}`, snapshot);
+
             setIsDrawing(false);
             setCurrentLine(undefined);
+            activeLayers[0].canvas.batchDraw();
         }
     }, [isDrawing, activeLayers, createHistorySnapshot, layers]);
 
