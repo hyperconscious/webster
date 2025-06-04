@@ -4,7 +4,7 @@ import { Layers, Eye, EyeOff, ChevronUp, ChevronDown, Trash2 } from 'lucide-reac
 
 interface LayerPanelProps {
     layers: Layer[];
-    activeLayerIndex: number;
+    activeLayerIndexes: number[];
     onAddLayer: () => void;
     onRemoveLayer: (id: string) => void;
     onToggleVisibility: (id: string) => void;
@@ -16,7 +16,7 @@ interface LayerPanelProps {
 
 const LayerPanel: React.FC<LayerPanelProps> = ({
     layers,
-    activeLayerIndex,
+    activeLayerIndexes,
     onAddLayer,
     onRemoveLayer,
     onToggleVisibility,
@@ -56,6 +56,16 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
 
     const themeClasses = getThemeClasses();
 
+    const layerActiveClasses = (index: number) => {
+        let returnClasses = 'p-3 rounded-xl transition-all cursor-pointer';
+        if (activeLayerIndexes.length > 0 && activeLayerIndexes.includes(index)) {
+            returnClasses += themeClasses.activeLayer;
+        } else {
+            returnClasses += themeClasses.layer;
+        }
+        return returnClasses;
+    };
+
     return (
         <div className={`${themeClasses.panel} p-4 h-full`}>
             <div className="flex justify-between items-center mb-4">
@@ -74,11 +84,7 @@ const LayerPanel: React.FC<LayerPanelProps> = ({
                 {layers.map((layer, index) => (
                     <div
                         key={layer.id}
-                        className={`p-3 rounded-xl transition-all cursor-pointer ${index === activeLayerIndex
-                            ? themeClasses.activeLayer
-                            : themeClasses.layer
-                            }`}
-                        
+                        className={layerActiveClasses(index)}
                         onClick={() => onSetActiveLayer(index)}
                     >
                         <div className="flex items-center justify-between">

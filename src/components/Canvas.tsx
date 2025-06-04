@@ -1,95 +1,125 @@
 import React, { useRef, useEffect, useState } from 'react';
-import type { Point, Theme } from '../types';
+import type { Point, ShapeTool, Theme } from '../types';
 import { ZoomIn, ZoomOut, MousePointer } from 'lucide-react';
 import Konva from 'konva';
 import { Stage } from 'react-konva';
+import type { Layer } from '../types';
+import { object } from 'joi';
 
 interface CanvasProps {
     width: number;
     height: number;
     layers: any[];
-    activeLayer: any;
+    activeLayers: Layer[];
     startDrawing: (point: Point) => void;
     draw: (point: Point) => void;
     stopDrawing: () => void;
+    selectClick: (e: Konva.KonvaEventObject<MouseEvent>, point: Point) => void;
+    //selectMove: (point: Point) => void;
+    //selectEnd: () => void;
+    delShape: () => void;
     settings: any;
     theme: Theme;
+    startCreateShape: (shapeTool: ShapeTool, point: Point) => void;
+    createShape: (point: Point) => void;
+    stopCreateShape: () => void;
+    selectionRef: React.RefObject<Konva.Rect | null>;
+    eyedropper: (point: Point) => void;
+    createText: (point: Point) => void;
+    textEdit: (point: Point, e: Konva.KonvaEventObject<MouseEvent>) => void;
+    transformerSelectLayer: Konva.Layer;
+    canvasRef: React.RefObject<Konva.Stage | null>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
+    scale: number;
+    setScale: (value: React.SetStateAction<number>) => void;
+    offset: { x: number; y: number };
+    setOffset: (value: React.SetStateAction<{ x: number; y: number }>) => void;
+    screenToCanvas: (x: number, y: number) => Point;
 }
 
 const Canvas: React.FC<CanvasProps> = ({
     width,
     height,
     layers,
-    activeLayer,
+    activeLayers,
     startDrawing,
     draw,
     stopDrawing,
+    selectClick,
+    //selectMove,
+    //selectEnd,
+    eyedropper,
+    createText,
     settings,
-    theme
+    theme,
+    startCreateShape,
+    createShape,
+    stopCreateShape,
+    delShape,
+    textEdit,
+    selectionRef,
+    transformerSelectLayer,
+    canvasRef,
+    containerRef,
+    scale,
+    setScale,
+    offset,
+    setOffset,
+    screenToCanvas
 }) => {
-    const canvasRef = useRef<Konva.Stage>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [scale, setScale] = useState(1);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
+    const [isDrawing, setIsDrawing] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [showZoomControls, setShowZoomControls] = useState(false);
+    const stageContainerRef = useRef<HTMLDivElement>(null);
 
     const renderLayers = () => {
+        if (!canvasRef.current || !containerRef.current) return;
         const stage = canvasRef.current;
-        if (!stage) return;
-
-        const merged = stage.getChildren((node) => { return node.id() === 'merged-layer' || node.id() === 'merged-layer2'; });
+        if (!stage || !activeLayers) return;
+        const merged = stage.getChildren((node) => { return node.name() === 'merged-layer' });
         merged.forEach(layer => layer.destroy());
         stage.removeChildren();
 
-        const mergedLayer = new Konva.Layer({ id: 'merged-layer' });
-        const mergedLayer2 = new Konva.Layer({ id: 'merged-layer2' });
-        
-        const activeLayerIndex = layers.indexOf(activeLayer);
-        layers.slice(activeLayerIndex + 1, layers.length).reverse().forEach(layer => {
-            if (layer.visible && layer.canvas !== activeLayer.canvas) {
-                const groupLayer = new Konva.Group({
-                    opacity: layer.opacity
-                });
-                layer.canvas.getChildren().forEach((child: any) => {
-                    groupLayer.add(child.clone());
-                });
-                mergedLayer.add(groupLayer);
+        let mergedLayer: Konva.Layer | null = null;
+        layers.slice().reverse().forEach(layer => {
+            if ((layer.type === "object" || activeLayers.includes(layer)) && layer.visible) {
+                if (mergedLayer && mergedLayer.getChildren().length > 0) {
+                    stage.add(mergedLayer);
+                    mergedLayer = null;
+                }
+                layer.canvas.opacity(layer.opacity);
+                stage.add(layer.canvas);
+            } else {
+                if (!mergedLayer) {
+                    mergedLayer = new Konva.Layer({ name: 'merged-layer' });
+                }
+                if (layer.visible) {
+                    const mergedGroup = new Konva.Group({ opacity: layer.opacity });
+                    layer.canvas.getChildren().forEach((child: any) => {
+                        if (mergedGroup) {
+                            mergedGroup.add(child.clone());
+                        }
+                    });
+                    mergedLayer.add(mergedGroup);
+                }
             }
         });
-        stage.add(mergedLayer);
-        if (activeLayer.visible) {
-            activeLayer.canvas.opacity(activeLayer.opacity);
-            stage.add(activeLayer.canvas);
+        if (mergedLayer) {
+            stage.add(mergedLayer);
         }
-        layers.slice(0, activeLayerIndex).reverse().forEach(layer => {
-            if (layer.visible && layer.canvas !== activeLayer.canvas) {
-                const groupLayer = new Konva.Group({
-                    opacity: layer.opacity
-                });
-                layer.canvas.getChildren().forEach((child: any) => {
-                    groupLayer.add(child.clone());
-                });
-                mergedLayer2.add(groupLayer);
-            }
-        });
-        stage.add(mergedLayer2);
+        stage.add(transformerSelectLayer);
     };
 
     useEffect(() => {
         renderLayers();
-    }, [layers, width, height, activeLayer]);
+    }, [width, height, layers, activeLayers]);
 
-    const screenToCanvas = (clientX: number, clientY: number): Point => {
-        if (!canvasRef.current || !containerRef.current) return { x: 0, y: 0 };
-
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = (clientX - rect.left - offset.x) / scale;
-        const y = (clientY - rect.top - offset.y) / scale;
-
-        return { x, y };
-    };
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Delete') {
+            delShape();
+        }
+    }
 
     const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
         const evt = e.evt;
@@ -97,9 +127,24 @@ const Canvas: React.FC<CanvasProps> = ({
             setIsDragging(true);
             setDragStart({ x: evt.clientX, y: evt.clientY });
         } else if (evt.button === 0) {
-            const point = screenToCanvas(evt.clientX, evt.clientY);
-            startDrawing(point);
-            renderLayers();
+            if (settings.tool === 'select') {
+                const point = screenToCanvas(evt.clientX, evt.clientY);
+                selectClick(e, point);
+            } else if (settings.tool === 'brush' || settings.tool === 'pencil'
+                || settings.tool === 'highlighter' || settings.tool === 'eraser') {
+                const point = screenToCanvas(evt.clientX, evt.clientY);
+                startDrawing(point);
+                setIsDrawing(true);
+            } else if (settings.tool === 'shapes') {
+                const point = screenToCanvas(evt.clientX, evt.clientY);
+                startCreateShape(settings.shapeTool, point);
+            } else if (settings.tool === 'eyedropper') {
+                const point = screenToCanvas(evt.clientX, evt.clientY);
+                eyedropper(point);
+            } else if (settings.tool === 'text') {
+                const point = screenToCanvas(evt.clientX, evt.clientY);
+                createText(point);
+            }
         }
     };
 
@@ -111,19 +156,28 @@ const Canvas: React.FC<CanvasProps> = ({
                 y: prev.y + (evt.clientY - dragStart.y)
             }));
             setDragStart({ x: evt.clientX, y: evt.clientY });
-        } else {
+        } else if (isDrawing) {
             const point = screenToCanvas(evt.clientX, evt.clientY);
             draw(point);
-            renderLayers();
+        } else if (settings.tool === 'shapes' && settings.shapeTool) {
+            const point = screenToCanvas(evt.clientX, evt.clientY);
+            createShape(point);
+        } else if (settings.tool === 'select' && selectionRef.current && selectionRef.current.visible()) {
+            const point = screenToCanvas(evt.clientX, evt.clientY);
+            //selectMove(point);
         }
     };
 
     const handleMouseUp = () => {
         if (isDragging) {
             setIsDragging(false);
-        } else {
+        } else if (isDrawing) {
             stopDrawing();
-            renderLayers();
+            setIsDrawing(false);
+        } else if (settings.tool === 'shapes' && settings.shapeTool) {
+            stopCreateShape();
+        } else if (settings.tool === 'select' && selectionRef.current && selectionRef.current.visible()) {
+            //selectEnd();
         }
     };
 
@@ -132,7 +186,13 @@ const Canvas: React.FC<CanvasProps> = ({
             setIsDragging(false);
         }
         stopDrawing();
-        renderLayers();
+    };
+
+    const handleMouseDbClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+        if (settings.tool === 'select') {
+            const point = screenToCanvas(e.evt.clientX, e.evt.clientY);
+            textEdit(point, e);
+        }
     };
 
     const handleWheel = (e: React.WheelEvent) => {
@@ -211,6 +271,11 @@ const Canvas: React.FC<CanvasProps> = ({
                     width: width,
                     height: height
                 }}
+                ref={stageContainerRef}
+                tabIndex={0}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                    handleKeyDown(e);
+                }}
             >
                 <Stage
                     ref={canvasRef}
@@ -221,7 +286,9 @@ const Canvas: React.FC<CanvasProps> = ({
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseLeave}
-                />
+                    onDblClick={handleMouseDbClick}
+                >
+                </Stage>
             </div>
 
             <div className={`absolute bottom-4 left-4 ${getControlsThemeClasses()} rounded-xl px-4 py-2 text-sm font-medium flex items-center gap-4`}>

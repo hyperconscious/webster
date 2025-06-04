@@ -12,6 +12,7 @@ import {
     Image,
     Scissors,
     Pipette,
+    MousePointer
 } from 'lucide-react';
 
 interface ToolPanelProps {
@@ -44,6 +45,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
     setShowShapesPanel
 }) => {
     const tools: ToolButton[] = [
+        { id: 'select', icon: <MousePointer size={20} />, label: 'Select' },
         { id: 'brush', icon: <Brush size={20} />, label: 'Brush' },
         { id: 'pencil', icon: <Pencil size={20} />, label: 'Pencil' },
         { id: 'highlighter', icon: <Highlighter size={20} />, label: 'Highlighter' },
@@ -51,7 +53,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
         { id: 'shapes', icon: <Square size={20} />, label: 'Shapes' },
         { id: 'text', icon: <Type size={20} />, label: 'Text' },
         { id: 'image', icon: <Image size={20} />, label: 'Image' },
-        { id: 'crop', icon: <Scissors size={20} />, label: 'Crop' },
+        //{ id: 'crop', icon: <Scissors size={20} />, label: 'Crop' },
         { id: 'eyedropper', icon: <Pipette size={20} />, label: 'Color Picker' }
     ];
 
