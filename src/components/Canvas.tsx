@@ -3,6 +3,8 @@ import type { Point, Theme } from '../types';
 import { ZoomIn, ZoomOut, MousePointer, Share2, Clipboard, Loader } from 'lucide-react';
 import Konva from 'konva';
 import { Stage } from 'react-konva';
+import config from '../config/env.config';
+import { notifyError, notifySuccess } from '../utils/notification';
 
 interface CanvasProps {
     width: number;
@@ -95,7 +97,7 @@ const Canvas: React.FC<CanvasProps> = ({
             const formData = new FormData();
             formData.append('image', dataUrl.replace(/^data:image\/png;base64,/, ''));
 
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY}`, {
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${config.IMGBB_API_KEY}`, {
                 method: 'POST',
                 body: formData
             });
@@ -106,12 +108,12 @@ const Canvas: React.FC<CanvasProps> = ({
                 const url = json.data.url;
                 return url;
             } else {
-                alert('Error uploading image: ' + json.error.message);
+                notifyError('Error uploading image: ' + json.error.message);
                 return null;
             }
         } catch (error) {
             console.error('Upload error:', error);
-            alert('Error uploading image. Please try again.');
+            notifyError('Error uploading image. Please try again.');
             return null;
         } finally {
             setIsUploading(false);
@@ -119,10 +121,9 @@ const Canvas: React.FC<CanvasProps> = ({
     };
 
     const handleShare = async () => {
-        let urlToShare =  await uploadImageToImgBB();
+        let urlToShare = await uploadImageToImgBB();
 
         if (!urlToShare) return;
-
 
         setShowShareDropdown(!showShareDropdown);
     };
@@ -132,9 +133,8 @@ const Canvas: React.FC<CanvasProps> = ({
         if (!urlToShare) return;
 
         await navigator.clipboard.writeText(urlToShare);
-        alert('Image link copied to clipboard!');
+        notifySuccess('Image link copied to clipboard!');
     };
-    
 
     const handleSocialShare = async (platform: string) => {
         let urlToShare = await uploadImageToImgBB();
@@ -245,7 +245,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
         switch (platform) {
             case 'telegram':
-                return `https://t.me/share/url?url=${encodedUrl}&text=${text}`;
+                return `https://telegram.me/share/url?url=${encodedUrl}&text=${text}`;
             case 'facebook':
                 return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
             case 'twitter':
