@@ -149,6 +149,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
         setFontFamily,
         setFontAlign,
         setFontHighlightColor,
+        setFontHighlightOpacity,
         selectActive,
         selectionRef,
         selectActiveLayer,
@@ -665,6 +666,26 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                         <option value="right">Right</option>
                     </select>
                 </div>
+                <div>
+                    <label className="text-sm mb-1 block">Text Highlight Color</label>
+                    <ColorPicker
+                        currentColor={settings.fontHighlightColor}
+                        onColorChange={setFontHighlightColor}
+                        theme={theme}
+                    />
+                </div>
+                <div>
+                    <label className="text-sm mb-1 block">Text Highlight Opacity</label>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={settings.fontHighlightOpacity}
+                        onChange={(e) => setFontHighlightOpacity(Number(e.target.value))}
+                        className="w-full"
+                    />
+                    <div className="text-sm mt-1">{settings.fontHighlightOpacity}%</div>
+                </div>
             </div>
         );
     }
@@ -805,37 +826,57 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                         />
                     </div>
                     <div>
-                    <label className="text-sm mb-1 block">Font Family</label>
-                    <select
-                        value={settings.fontFamily}
-                        onChange={(e) => setFontFamily(e.target.value)}
-                        className={`w-full p-2 rounded-lg ${theme === 'light'
-                            ? 'bg-white border-gray-200'
-                            : 'bg-gray-800 border-gray-700'
-                            }`}
-                    >
-                        <option value="Arial">Arial</option>
-                        <option value="Courier New">Courier New</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Verdana">Verdana</option>
-                    </select>
-                </div>
-                <div>
-                    <label className="text-sm mb-1 block">Text Alignment</label>
-                    <select
-                        value={settings.fontAlign}
-                        onChange={(e) => setFontAlign(e.target.value as 'left' | 'center' | 'right')}
-                        className={`w-full p-2 rounded-lg ${theme === 'light'
-                            ? 'bg-white border-gray-200'
-                            : 'bg-gray-800 border-gray-700'
-                            }`}
-                    >
-                        <option value="left">Left</option>
-                        <option value="center">Center</option>
-                        <option value="right">Right</option>
-                    </select>
-                </div>
+                        <label className="text-sm mb-1 block">Font Family</label>
+                        <select
+                            value={settings.fontFamily}
+                            onChange={(e) => setFontFamily(e.target.value)}
+                            className={`w-full p-2 rounded-lg ${theme === 'light'
+                                ? 'bg-white border-gray-200'
+                                : 'bg-gray-800 border-gray-700'
+                                }`}
+                        >
+                            <option value="Arial">Arial</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Verdana">Verdana</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-sm mb-1 block">Text Alignment</label>
+                        <select
+                            value={settings.fontAlign}
+                            onChange={(e) => setFontAlign(e.target.value as 'left' | 'center' | 'right')}
+                            className={`w-full p-2 rounded-lg ${theme === 'light'
+                                ? 'bg-white border-gray-200'
+                                : 'bg-gray-800 border-gray-700'
+                                }`}
+                        >
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="text-sm mb-1 block">Text Highlight Color</label>
+                        <ColorPicker
+                            currentColor={settings.fontHighlightColor}
+                            onColorChange={setFontHighlightColor}
+                            theme={theme}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm mb-1 block">Text Highlight Opacity</label>
+                        <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={settings.fontHighlightOpacity}
+                            onChange={(e) => setFontHighlightOpacity(Number(e.target.value))}
+                            className="w-full"
+                        />
+                        <div className="text-sm mt-1">{settings.fontHighlightOpacity}%</div>
+                    </div>
                 </div>
             );
         }

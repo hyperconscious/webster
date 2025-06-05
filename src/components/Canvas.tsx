@@ -78,9 +78,9 @@ const Canvas: React.FC<CanvasProps> = ({
     const [showShareDropdown, setShowShareDropdown] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-    function getLineGuideStops(stage: Konva.Stage): { vertical: number[]; horizontal: number[] } {
-        var vertical = [0, width / 2, width];
-        var horizontal = [0, height / 2, height];
+    function getLineStops(): { vertical: number[]; horizontal: number[] } {
+        const vertical = [0, width / 2, width];
+        const horizontal = [0, height / 2, height];
         const gridWidth = width / 10;
         const gridHeight = height / 10;
 
@@ -97,77 +97,95 @@ const Canvas: React.FC<CanvasProps> = ({
         };
     }
 
-    const getObjectSnappingEdges = (node: Konva.Node) => {
-        const box = node.getClientRect();
-        const absPos = node.absolutePosition();
+    const getObjectsBoundingBox = (nodes: Konva.Node[]) => {
+        if (!nodes || nodes.length === 0) return null;
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        nodes.forEach(node => {
+            const box = node.getClientRect();
+            minX = Math.min(minX, box.x);
+            minY = Math.min(minY, box.y);
+            maxX = Math.max(maxX, box.x + box.width);
+            maxY = Math.max(maxY, box.y + box.height);
+        });
+
+        return {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY,
+        };
+    };
+
+
+    const getObjectEdges = (nodes: Konva.Node[]) => {
+        const box = getObjectsBoundingBox(nodes);
+        if (!box) {
+            return {
+                vertical: [],
+                horizontal: []
+            };
+        }
 
         return {
             vertical: [
                 {
                     guide: Math.round(box.x),
-                    offset: Math.round(absPos.x - box.x),
-                    snap: 'start',
+                    snap: 'start'
                 },
                 {
                     guide: Math.round(box.x + box.width / 2),
-                    offset: Math.round(absPos.x - box.x - box.width / 2),
-                    snap: 'center',
+                    snap: 'center'
                 },
                 {
                     guide: Math.round(box.x + box.width),
-                    offset: Math.round(absPos.x - box.x - box.width),
-                    snap: 'end',
+                    snap: 'end'
                 },
             ],
             horizontal: [
                 {
                     guide: Math.round(box.y),
-                    offset: Math.round(absPos.y - box.y),
-                    snap: 'start',
+                    snap: 'start'
                 },
                 {
                     guide: Math.round(box.y + box.height / 2),
-                    offset: Math.round(absPos.y - box.y - box.height / 2),
-                    snap: 'center',
+                    snap: 'center'
                 },
                 {
                     guide: Math.round(box.y + box.height),
-                    offset: Math.round(absPos.y - box.y - box.height),
-                    snap: 'end',
+                    snap: 'end'
                 },
             ],
         };
     }
 
-    const getGuides = (
+    const getLines = (
         lineGuideStops: { vertical: number[]; horizontal: number[] },
         itemBounds: {
-            vertical: { guide: number; offset: number; snap: string }[];
-            horizontal: { guide: number; offset: number; snap: string }[];
+            vertical: { guide: number; snap: string }[];
+            horizontal: { guide: number; snap: string }[];
         }
     ) => {
-        const resultV: {
+        const resultVer: {
             lineGuide: number;
             diff: number;
             snap: string;
-            offset: number;
         }[] = [];
-        const resultH: {
+        const resultHoz: {
             lineGuide: number;
             diff: number;
             snap: string;
-            offset: number;
         }[] = [];
 
         lineGuideStops.vertical.forEach((lineGuide) => {
             itemBounds.vertical.forEach((itemBound) => {
                 const diff = Math.abs(lineGuide - itemBound.guide);
                 if (diff < 5) {
-                    resultV.push({
+                    resultVer.push({
                         lineGuide: lineGuide,
                         diff: diff,
-                        snap: itemBound.snap,
-                        offset: itemBound.offset,
+                        snap: itemBound.snap
                     });
                 }
             });
@@ -175,39 +193,35 @@ const Canvas: React.FC<CanvasProps> = ({
 
         lineGuideStops.horizontal.forEach((lineGuide) => {
             itemBounds.horizontal.forEach((itemBound) => {
-                var diff = Math.abs(lineGuide - itemBound.guide);
+                const diff = Math.abs(lineGuide - itemBound.guide);
                 if (diff < 5) {
-                    resultH.push({
+                    resultHoz.push({
                         lineGuide: lineGuide,
                         diff: diff,
-                        snap: itemBound.snap,
-                        offset: itemBound.offset,
+                        snap: itemBound.snap
                     });
                 }
             });
         });
 
-        var guides: {
+        const guides: {
             lineGuide: number;
-            offset: number;
             orientation: "V" | "H";
             snap: string;
         }[] = [];
 
-        var minV = resultV.sort((a, b) => a.diff - b.diff)[0];
-        var minH = resultH.sort((a, b) => a.diff - b.diff)[0];
+        const minV = resultVer.sort((a, b) => a.diff - b.diff)[0];
+        const minH = resultHoz.sort((a, b) => a.diff - b.diff)[0];
         if (minV) {
             guides.push({
                 lineGuide: minV.lineGuide,
-                offset: minV.offset,
                 orientation: 'V' as "V",
-                snap: minV.snap,
+                snap: minV.snap
             });
         }
         if (minH) {
             guides.push({
                 lineGuide: minH.lineGuide,
-                offset: minH.offset,
                 orientation: 'H' as "H",
                 snap: minH.snap,
             });
@@ -215,18 +229,15 @@ const Canvas: React.FC<CanvasProps> = ({
         return guides;
     }
 
-    function drawGuides(
-        layer: Konva.Layer,
-        guides: Array<{
+    const drawGrid = ( layer: Konva.Layer, guides: Array<{
             lineGuide: number;
-            offset: number;
             orientation: 'H' | 'V';
             snap: string;
         }>
-    ) {
+    ) => {
         guides.forEach((lg) => {
             if (lg.orientation === 'H') {
-                var line = new Konva.Line({
+                const line = new Konva.Line({
                     points: [-6000, 0, 6000, 0],
                     stroke: 'rgb(0, 161, 255)',
                     strokeWidth: 1,
@@ -239,7 +250,7 @@ const Canvas: React.FC<CanvasProps> = ({
                     y: lg.lineGuide,
                 });
             } else if (lg.orientation === 'V') {
-                var line = new Konva.Line({
+                const line = new Konva.Line({
                     points: [0, -6000, 0, 6000],
                     stroke: 'rgb(0, 161, 255)',
                     strokeWidth: 1,
@@ -255,38 +266,38 @@ const Canvas: React.FC<CanvasProps> = ({
         });
     }
 
-    const dragmoveHandler = (stage: Konva.Stage, e: Konva.KonvaEventObject<MouseEvent>) => {
+    const dragmoveHandler = () => {
         if (!transformerRef || !transformerRef.current || transformerRef.current.nodes().length === 0) return;
-        const layer = e.target.getLayer();
+        const layer = transformerRef.current.getLayer();
         if (layer) {
             layer.find('.guid-line').forEach((line) => {
                 (line as Konva.Line).destroy();
             });
         }
 
-        const lineGuideStops = getLineGuideStops(stage);
-        const itemBounds = getObjectSnappingEdges(e.target);
+        const lineGuideStops = getLineStops();
+        const itemBounds = getObjectEdges(transformerRef.current.nodes());
 
-        const guides = getGuides(lineGuideStops, itemBounds);
+        const guides = getLines(lineGuideStops, itemBounds);
 
         if (!guides.length) {
             return;
         }
 
-        const targetLayer = e.target.getLayer();
+        const targetLayer = transformerRef.current.getLayer();
         if (targetLayer) {
-            drawGuides(targetLayer, guides);
+            drawGrid(targetLayer, guides);
         }
 
-        const absPos = e.target.absolutePosition();
+        const absPos = transformerRef.current.absolutePosition();
         guides.forEach((lg) => {
             switch (lg.orientation) {
                 case 'V': {
-                    absPos.x = lg.lineGuide + lg.offset;
+                    absPos.x = lg.lineGuide;
                     break;
                 }
                 case 'H': {
-                    absPos.y = lg.lineGuide + lg.offset;
+                    absPos.y = lg.lineGuide;
                     break;
                 }
             }
@@ -302,7 +313,7 @@ const Canvas: React.FC<CanvasProps> = ({
         merged.forEach(layer => layer.destroy());
         stage.removeChildren();
 
-        stage.on('dragmove', (e: Konva.KonvaEventObject<MouseEvent>) => { dragmoveHandler(stage, e); });
+        stage.on('dragmove', () => { dragmoveHandler(); });
         stage.on('dragend', (e: Konva.KonvaEventObject<MouseEvent>) => {
             const layer = e.target.getLayer();
             if (layer) {
