@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen, File, History, BookDashed } from 'lucide-react';
+import { Palette, Sun, Moon, ChevronDown, Cloud, Save, FolderOpen, File, History, BookDashed, UserRound, CornerDownLeft } from 'lucide-react';
 import type { Theme, CanvasSize } from '../types';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ProjectService from '../services/ProjectService';
 
 interface MenuItem {
@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({
     onExportPDF
 }) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const sizeMenuRef = useRef<HTMLDivElement>(null);
     const [projectName, setProjectName] = useState(initialProjectName || 'Untitled');
     const [editingName, setEditingName] = useState(false);
@@ -58,9 +58,10 @@ const Header: React.FC<HeaderProps> = ({
     const [isOpen, setIsOpen] = useState(false);
     const isOpenRef = useRef<HTMLDivElement>(null);
 
+
     const menuItems: MenuItem[] = [
         { label: "Add this template", icon: <BookDashed size={16} />, onClick: () => onAddTemplate?.() },
-        { label: "Save as...", icon: <Save size={16} />, shortcut: "Ctrl+Shift+S", onClick: () => console.log("Save As") },
+        { label: "Save as...", icon: <Save size={16} />, shortcut: "Ctrl+Shift+S", onClick: () => onExportPNG?.() },
         { label: "History", icon: <History size={16} />, onClick: () => setShowHistoryModal?.(true) },
         { label: "Export as PNG", icon: <File size={16} />, divider: true, onClick: () => onExportPNG?.() },
         { label: "Export as JPEG", icon: <File size={16} />, onClick: () => onExportJPEG?.() },
@@ -126,7 +127,7 @@ const Header: React.FC<HeaderProps> = ({
         await ProjectService.updateProject(projectSlug, { name: projectName });
     };
     return (
-        <header className={`p-4 flex items-center justify-between ${themeClasses.bg}`}>
+        <header className={`p-2 flex items-center justify-between ${themeClasses.bg}`}>
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                     <Palette className="text-blue-500" size={24} />
@@ -184,6 +185,7 @@ const Header: React.FC<HeaderProps> = ({
                         >
                             <File size={16} />
                             <span>File</span>
+                            <ChevronDown size={16} />
                         </button>
 
                         {isOpen && (
@@ -227,6 +229,7 @@ const Header: React.FC<HeaderProps> = ({
                     >
                         <FolderOpen size={18} />
                         Projects
+                        <CornerDownLeft size={16} />
                     </Link>
                 </div>
             </div>
@@ -238,6 +241,7 @@ const Header: React.FC<HeaderProps> = ({
                         ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                         }`}
+                    title='Change Theme'
                 >
                     {theme === 'light' ? <Sun size={20} /> : theme === "blue" ? <Cloud size={20} /> : <Moon size={20} />}
                 </button>
@@ -249,6 +253,7 @@ const Header: React.FC<HeaderProps> = ({
                             ? ' bg-gray-100 text-gray-700 hover:bg-gray-200'
                             : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                             }`}
+                        title='Change Canvas Size'
                     >
                         <span className="text-sm">{currentWidth} × {currentHeight}</span>
                         <ChevronDown size={16} />
@@ -286,6 +291,16 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                     )}
                 </div>
+                <button
+                    onClick={() => navigate('/profile')}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
+                        ? ' bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        }`}
+                    title='Profile'
+                >
+                    <UserRound size={18} />
+                </button>
             </div>
         </header >
     );

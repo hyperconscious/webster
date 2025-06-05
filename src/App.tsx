@@ -14,6 +14,7 @@ import { Toaster } from 'react-hot-toast';
 import ProjectsPage from './pages/ProjectsPage.tsx';
 import { useState } from 'react';
 import type { Theme } from './types/index.ts';
+import NotFound from './pages/NotFound.tsx';
 
 function App() {
     const [theme, setTheme] = useState<Theme>('light');
@@ -28,6 +29,7 @@ function App() {
                     <Route path="/auth" element={<Authentcation />} />
                     <Route path="/auth/verify-email" element={<EmailVerificationPage />} />
                     <Route path="/auth/reset-password" element={<PasswordResetPage />} />
+                    <Route path="*" element={<NotFound theme={theme} />} />
                 </Routes>
                 <Toaster />
             </Router>
