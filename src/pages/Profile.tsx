@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {User, Building, Mail, Plus, Edit2, X, Camera, LogIn, Palette} from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useUser } from '../hooks/useUser';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import UserService from '../services/UserService';
 import { useForm } from 'react-hook-form';
 import { type UpdateUserData, updateUserDto } from '../validation/schemas';
@@ -13,7 +13,11 @@ import { notifyError, notifySuccess } from '../utils/notification';
 import config from '../config/env.config';
 import PasswordModal from '../components/PasswordConfirmModal';
 
-export const Profile: React.FC = () => {
+export interface ProfileProps {
+    theme: 'light' | 'dark' | 'blue';
+}
+
+export const Profile: React.FC<ProfileProps> = ({ theme }) => {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const { user, setUser } = useUser();
@@ -110,24 +114,63 @@ export const Profile: React.FC = () => {
         }
     };
 
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    const getThemeClasses = () => {
+        switch (theme) {
+            case 'light':
+                return {
+                    bg: 'bg-gray-100 text-gray-900',
+                    card: 'bg-white border-gray-400',
+                    text: 'text-gray-900',
+                    input: 'bg-white border-gray-200',
+                    button: 'bg-blue-500 hover:bg-blue-600 text-white'
+                };
+            case 'blue':
+                return {
+                    bg: 'bg-blue-950 text-white',
+                    card: 'bg-blue-900 border-blue-800',
+                    text: 'text-white',
+                    input: 'bg-blue-800 border-blue-700',
+                    button: 'bg-blue-600 hover:bg-blue-700 text-white'
+                };
+            default:
+                return {
+                    bg: 'bg-gray-900 text-white',
+                    card: 'bg-gray-800 border-gray-700',
+                    text: 'text-white',
+                    input: 'bg-gray-700 border-gray-600',
+                    button: 'bg-gray-700 hover:bg-gray-600 text-white'
+                };
+        }
+    };
+    const themeClasses = getThemeClasses();
+
     return (
-        <>
-            <header className={`p-2 flex items-center justify-between`}>
+        <div className={`min-h-screen ${themeClasses.bg}`}>
+            <header className={`ps-2 pt-4 pb-3 flex items-center justify-between ${themeClasses.card} border-b`}>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
+                    <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                         <Palette className="text-blue-500" size={24}/>
                         <h1 className="text-xl font-bold">Photster</h1>
-                    </div>
+                    </Link>
                 </div>
             </header>
-            <div className="max-w-4xl mx-auto space-y-8">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="max-w-4xl mx-auto space-y-8 p-8">
+                <h1 className={`text-3xl font-bold ${themeClasses.text}`}>
                     Profile Settings
                 </h1>
 
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm">
+                <div className={`${themeClasses.card} rounded-xl p-8 shadow-sm border`}>
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <h2 className={`text-xl font-semibold ${themeClasses.text} flex items-center gap-2`}>
                             <User className="w-6 h-6 text-blue-500" />
                             Personal Information
                         </h2>
@@ -151,10 +194,19 @@ export const Profile: React.FC = () => {
 
                     <div className="flex items-center gap-8 mb-8">
                         <div className="relative">
-                            <img
-                                src={`${config.BACKEND_URL}${user.avatar}`}
-                                alt="Profile"
-                                className="w-24 h-24 rounded-full object-cover" />
+                            {user.avatar ? (
+                                <img
+                                    src={`${config.BACKEND_URL}${user.avatar}`}
+                                    alt="Profile"
+                                    className="w-24 h-24 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center">
+                                    <span className="text-white text-2xl font-semibold">
+                                        {getInitials(user.full_name)}
+                                    </span>
+                                </div>
+                            )}
                             <div
                                 {...getRootProps()}
                                 className="absolute bottom-0 right-0 p-2 bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
@@ -168,48 +220,51 @@ export const Profile: React.FC = () => {
                             {isEditing ? (
                                 <form onSubmit={handleSubmit(onSubmit)}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                                         <InputField
                                             label="Full Name"
                                             type="text"
                                             register={register('full_name')}
-                                            error={errors.full_name?.message} />
+                                            error={errors.full_name?.message}
+                                            theme={theme} />
                                         <InputField
                                             label="Login"
                                             type="text"
                                             register={register('login')}
-                                            error={errors.login?.message} />
+                                            error={errors.login?.message}
+                                            theme={theme} />
                                         <InputField
                                             label="Email"
                                             type="email"
                                             register={register('email')}
-                                            error={errors.email?.message} />
+                                            error={errors.email?.message}
+                                            theme={theme} />
                                         <div className="flex gap-2 col-span-2">
                                             <InputField
                                                 label="Password"
                                                 type="password"
                                                 register={register('password')}
-                                                error={errors.password?.message} />
+                                                error={errors.password?.message}
+                                                theme={theme} />
                                             <InputField
                                                 label="Password Confirmation"
                                                 type="password"
                                                 register={register('passwordConfirmation')}
-                                                error={errors.passwordConfirmation?.message} />
+                                                error={errors.passwordConfirmation?.message}
+                                                theme={theme} />
                                         </div>
-
                                     </div>
                                 </form>
                             ) : (
                                 <div className="space-y-4">
-                                    <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <p className={`flex items-center gap-2 ${themeClasses.text}`}>
                                         <LogIn className="w-4 h-4 text-gray-500" />
                                         {user.login}
                                     </p>
-                                    <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <p className={`flex items-center gap-2 ${themeClasses.text}`}>
                                         <User className="w-4 h-4 text-gray-500" />
                                         {user.full_name}
                                     </p>
-                                    <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                    <p className={`flex items-center gap-2 ${themeClasses.text}`}>
                                         <Mail className="w-4 h-4 text-gray-500" />
                                         {user.email}
                                     </p>
@@ -223,18 +278,19 @@ export const Profile: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={handleSubmit(onSubmit)}
-                                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                className={`px-6 py-3 ${themeClasses.button} rounded-lg transition-colors`}
                             >
                                 Save Changes
                             </button>
                         </div>
                     )}
                 </div>
-            </div >
+            </div>
             <PasswordModal
                 open={showPasswordModal}
                 onClose={() => setShowPasswordModal(false)}
-                onConfirm={onPasswordConfirm} />
-        </>
+                onConfirm={onPasswordConfirm}
+                theme={theme} />
+        </div>
     );
 };
