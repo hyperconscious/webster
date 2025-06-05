@@ -4,9 +4,7 @@ import { BadRequestError } from '../utils/http-errors';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadFolder = req.originalUrl.includes('/posts')
-      ? 'uploads/posts/'
-      : 'uploads/avatars/';
+    const uploadFolder = 'uploads/avatars/';
     cb(null, uploadFolder);
   },
   filename: (req, file, cb) => {

@@ -143,59 +143,7 @@ function Register() {
                         error={errors.passwordConfirmation?.message}
                     />
                 </div>
-                <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                        Country
-                    </label>
-                    <Controller
-                        name="countryCode"
-                        control={control}
-                        render={({ field }) => (
-                            <ReactSelect
-                                options={countryOptions as unknown as { value: string; label: string }[]}
-                                className='w-full border border-gray-300 dark:border-gray-600
-                     rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent dark:bg-gray-700 dark:text-white'
-                                styles={{
-                                    control: (baseStyles) => ({
-                                        ...baseStyles,
-                                        backgroundColor: theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e3a8a' : '#ffffff',
-                                        borderColor: theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#1e40af' : '#e2e8f0',
-                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000',
-                                        borderRadius: '8px',
-                                        boxShadow: theme === 'dark' ? '0 2px 4px rgba(255, 255, 255, 0.1)' : theme === 'blue' ? '0 2px 4px rgba(30, 58, 138, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                    }),
-                                    option: (baseStyles, state) => ({
-                                        ...baseStyles,
-                                        backgroundColor: state.isSelected
-                                            ? (theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#2563eb' : '#3182ce')
-                                            : state.isFocused
-                                                ? (theme === 'dark' ? 'black' : theme === 'blue' ? '#1e3a8a' : 'white')
-                                                : (theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e40af' : '#edf2f7'),
-                                        color: state.isSelected ? '#ffffff' : (theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000'),
-                                        cursor: 'pointer',
-                                    }),
-                                    singleValue: (baseStyles) => ({
-                                        ...baseStyles,
-                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000',
-                                    }),
-                                }}
-                                classNamePrefix="react-select"
-                                onChange={(selectedOption: SingleValue<{ value: string; label: string }>) => {
-                                    const selectedValue = selectedOption?.value;
-                                    if (selectedValue) {
-                                        const selectedCountry = countries.find(
-                                            (country) => country.name === selectedValue
-                                        );
-                                        if (selectedCountry) {
-                                            field.onChange(selectedCountry.code);
-                                        }
-                                    }
-                                }}
-                            />
-                        )}
-                    />
-                    {errors.countryCode && <p className="p-2 rounded-lg flex items-center justify-center space-x-2 text-red-700 dark:text-red-200">{errors.countryCode.message}</p>}
-                </div>
+
                 <div className="col-span-2">
                     <button
                         type="submit"
