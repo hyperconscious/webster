@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Building, Mail, Plus, Edit2, X, Camera, LogIn } from 'lucide-react';
+import {User, Building, Mail, Plus, Edit2, X, Camera, LogIn, Palette} from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useUser } from '../hooks/useUser';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -112,16 +112,24 @@ export const Profile: React.FC = () => {
 
     return (
         <>
+            <header className={`p-2 flex items-center justify-between`}>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Palette className="text-blue-500" size={24}/>
+                        <h1 className="text-xl font-bold">Photster</h1>
+                    </div>
+                </div>
+            </header>
             <div className="max-w-4xl mx-auto space-y-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {t('profile.title')}
+                    Profile Settings
                 </h1>
 
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                             <User className="w-6 h-6 text-blue-500" />
-                            {t('profile.personalInfo')}
+                            Personal Information
                         </h2>
                         <button
                             onClick={() => setIsEditing(!isEditing)}
@@ -130,12 +138,12 @@ export const Profile: React.FC = () => {
                             {isEditing ? (
                                 <>
                                     <X className="w-4 h-4" />
-                                    {t('profile.cancel')}
+                                    Cancel
                                 </>
                             ) : (
                                 <>
                                     <Edit2 className="w-4 h-4" />
-                                    {t('profile.edit')}
+                                    Edit
                                 </>
                             )}
                         </button>
@@ -162,28 +170,28 @@ export const Profile: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                                         <InputField
-                                            label={t('profile.name')}
+                                            label="Full Name"
                                             type="text"
                                             register={register('full_name')}
                                             error={errors.full_name?.message} />
                                         <InputField
-                                            label={t('profile.login')}
+                                            label="Login"
                                             type="text"
                                             register={register('login')}
                                             error={errors.login?.message} />
                                         <InputField
-                                            label={t('profile.email')}
+                                            label="Email"
                                             type="email"
                                             register={register('email')}
                                             error={errors.email?.message} />
                                         <div className="flex gap-2 col-span-2">
                                             <InputField
-                                                label={t('profile.password')}
+                                                label="Password"
                                                 type="password"
                                                 register={register('password')}
                                                 error={errors.password?.message} />
                                             <InputField
-                                                label={t('profile.passwordConfirmation')}
+                                                label="Password Confirmation"
                                                 type="password"
                                                 register={register('passwordConfirmation')}
                                                 error={errors.passwordConfirmation?.message} />
@@ -217,26 +225,10 @@ export const Profile: React.FC = () => {
                                 onClick={handleSubmit(onSubmit)}
                                 className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                             >
-                                {t('profile.save')}
+                                Save Changes
                             </button>
                         </div>
                     )}
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Building className="w-6 h-6 text-blue-500" />
-                            {t('profile.companies')}
-                        </h2>
-                        <button
-                            onClick={() => navigate('/companies/create')}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            {t('profile.addCompany')}
-                        </button>
-                    </div>
                 </div>
             </div >
             <PasswordModal
