@@ -31,6 +31,7 @@ interface CanvasProps {
     transformerSelectLayer: Konva.Layer;
     canvasRef: React.RefObject<Konva.Stage | null>;
     containerRef: React.RefObject<HTMLDivElement | null>;
+    transformerRef: React.RefObject<Konva.Transformer | null>;
     scale: number;
     setScale: (value: React.SetStateAction<number>) => void;
     offset: { x: number; y: number };
@@ -62,6 +63,7 @@ const Canvas: React.FC<CanvasProps> = ({
     transformerSelectLayer,
     canvasRef,
     containerRef,
+    transformerRef,
     scale,
     setScale,
     offset,
@@ -76,6 +78,222 @@ const Canvas: React.FC<CanvasProps> = ({
     const [showShareDropdown, setShowShareDropdown] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
+    function getLineGuideStops(stage: Konva.Stage): { vertical: number[]; horizontal: number[] } {
+        var vertical = [0, width / 2, width];
+        var horizontal = [0, height / 2, height];
+        const gridWidth = width / 10;
+        const gridHeight = height / 10;
+
+        for (let i = 1; i < width / gridWidth; i++) {
+            vertical.push(i * gridWidth);
+        }
+        for (let j = 1; j < height / gridHeight; j++) {
+            horizontal.push(j * gridHeight);
+        }
+
+        return {
+            vertical: vertical,
+            horizontal: horizontal
+        };
+    }
+
+    const getObjectSnappingEdges = (node: Konva.Node) => {
+        const box = node.getClientRect();
+        const absPos = node.absolutePosition();
+
+        return {
+            vertical: [
+                {
+                    guide: Math.round(box.x),
+                    offset: Math.round(absPos.x - box.x),
+                    snap: 'start',
+                },
+                {
+                    guide: Math.round(box.x + box.width / 2),
+                    offset: Math.round(absPos.x - box.x - box.width / 2),
+                    snap: 'center',
+                },
+                {
+                    guide: Math.round(box.x + box.width),
+                    offset: Math.round(absPos.x - box.x - box.width),
+                    snap: 'end',
+                },
+            ],
+            horizontal: [
+                {
+                    guide: Math.round(box.y),
+                    offset: Math.round(absPos.y - box.y),
+                    snap: 'start',
+                },
+                {
+                    guide: Math.round(box.y + box.height / 2),
+                    offset: Math.round(absPos.y - box.y - box.height / 2),
+                    snap: 'center',
+                },
+                {
+                    guide: Math.round(box.y + box.height),
+                    offset: Math.round(absPos.y - box.y - box.height),
+                    snap: 'end',
+                },
+            ],
+        };
+    }
+
+    const getGuides = (
+        lineGuideStops: { vertical: number[]; horizontal: number[] },
+        itemBounds: {
+            vertical: { guide: number; offset: number; snap: string }[];
+            horizontal: { guide: number; offset: number; snap: string }[];
+        }
+    ) => {
+        const resultV: {
+            lineGuide: number;
+            diff: number;
+            snap: string;
+            offset: number;
+        }[] = [];
+        const resultH: {
+            lineGuide: number;
+            diff: number;
+            snap: string;
+            offset: number;
+        }[] = [];
+
+        lineGuideStops.vertical.forEach((lineGuide) => {
+            itemBounds.vertical.forEach((itemBound) => {
+                const diff = Math.abs(lineGuide - itemBound.guide);
+                if (diff < 5) {
+                    resultV.push({
+                        lineGuide: lineGuide,
+                        diff: diff,
+                        snap: itemBound.snap,
+                        offset: itemBound.offset,
+                    });
+                }
+            });
+        });
+
+        lineGuideStops.horizontal.forEach((lineGuide) => {
+            itemBounds.horizontal.forEach((itemBound) => {
+                var diff = Math.abs(lineGuide - itemBound.guide);
+                if (diff < 5) {
+                    resultH.push({
+                        lineGuide: lineGuide,
+                        diff: diff,
+                        snap: itemBound.snap,
+                        offset: itemBound.offset,
+                    });
+                }
+            });
+        });
+
+        var guides: {
+            lineGuide: number;
+            offset: number;
+            orientation: "V" | "H";
+            snap: string;
+        }[] = [];
+
+        var minV = resultV.sort((a, b) => a.diff - b.diff)[0];
+        var minH = resultH.sort((a, b) => a.diff - b.diff)[0];
+        if (minV) {
+            guides.push({
+                lineGuide: minV.lineGuide,
+                offset: minV.offset,
+                orientation: 'V' as "V",
+                snap: minV.snap,
+            });
+        }
+        if (minH) {
+            guides.push({
+                lineGuide: minH.lineGuide,
+                offset: minH.offset,
+                orientation: 'H' as "H",
+                snap: minH.snap,
+            });
+        }
+        return guides;
+    }
+
+    function drawGuides(
+        layer: Konva.Layer,
+        guides: Array<{
+            lineGuide: number;
+            offset: number;
+            orientation: 'H' | 'V';
+            snap: string;
+        }>
+    ) {
+        guides.forEach((lg) => {
+            if (lg.orientation === 'H') {
+                var line = new Konva.Line({
+                    points: [-6000, 0, 6000, 0],
+                    stroke: 'rgb(0, 161, 255)',
+                    strokeWidth: 1,
+                    name: 'guid-line',
+                    dash: [4, 6],
+                });
+                layer.add(line);
+                line.absolutePosition({
+                    x: 0,
+                    y: lg.lineGuide,
+                });
+            } else if (lg.orientation === 'V') {
+                var line = new Konva.Line({
+                    points: [0, -6000, 0, 6000],
+                    stroke: 'rgb(0, 161, 255)',
+                    strokeWidth: 1,
+                    name: 'guid-line',
+                    dash: [4, 6],
+                });
+                layer.add(line);
+                line.absolutePosition({
+                    x: lg.lineGuide,
+                    y: 0,
+                });
+            }
+        });
+    }
+
+    const dragmoveHandler = (stage: Konva.Stage, e: Konva.KonvaEventObject<MouseEvent>) => {
+        if (!transformerRef || !transformerRef.current || transformerRef.current.nodes().length === 0) return;
+        const layer = e.target.getLayer();
+        if (layer) {
+            layer.find('.guid-line').forEach((line) => {
+                (line as Konva.Line).destroy();
+            });
+        }
+
+        const lineGuideStops = getLineGuideStops(stage);
+        const itemBounds = getObjectSnappingEdges(e.target);
+
+        const guides = getGuides(lineGuideStops, itemBounds);
+
+        if (!guides.length) {
+            return;
+        }
+
+        const targetLayer = e.target.getLayer();
+        if (targetLayer) {
+            drawGuides(targetLayer, guides);
+        }
+
+        const absPos = e.target.absolutePosition();
+        guides.forEach((lg) => {
+            switch (lg.orientation) {
+                case 'V': {
+                    absPos.x = lg.lineGuide + lg.offset;
+                    break;
+                }
+                case 'H': {
+                    absPos.y = lg.lineGuide + lg.offset;
+                    break;
+                }
+            }
+        });
+        transformerRef.current.absolutePosition(absPos);
+    }
+
     const renderLayers = () => {
         if (!canvasRef.current || !containerRef.current) return;
         const stage = canvasRef.current;
@@ -83,6 +301,16 @@ const Canvas: React.FC<CanvasProps> = ({
         const merged = stage.getChildren((node) => { return node.name() === 'merged-layer' });
         merged.forEach(layer => layer.destroy());
         stage.removeChildren();
+
+        stage.on('dragmove', (e: Konva.KonvaEventObject<MouseEvent>) => { dragmoveHandler(stage, e); });
+        stage.on('dragend', (e: Konva.KonvaEventObject<MouseEvent>) => {
+            const layer = e.target.getLayer();
+            if (layer) {
+                layer.find('.guid-line').forEach((line) => {
+                    (line as Konva.Line).destroy();
+                });
+            }
+        });
 
         let mergedLayer: Konva.Layer | null = null;
         layers.slice().reverse().forEach(layer => {

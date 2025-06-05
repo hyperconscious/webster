@@ -23,6 +23,9 @@ export interface Settings {
     fontSize: number;
     fontStyle: FontStyle;
     fontColor: string;
+    fontFamily: string;
+    fontAlign: 'left' | 'center' | 'right';
+    fontHighlightColor: string;
 }
 
 export type nodeType =

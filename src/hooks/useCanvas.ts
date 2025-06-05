@@ -47,6 +47,9 @@ export const useCanvas = ({
         fontSize: 16,
         fontStyle: 'normal',
         fontColor: '#000000',
+        fontFamily: 'Arial',
+        fontAlign: 'left',
+        fontHighlightColor: '#ffffff'
     });
     const [currentLine, setCurrentLine] = useState<Konva.Line>();
     const lastPointRef = useRef<Point | null>(null);
@@ -348,6 +351,8 @@ export const useCanvas = ({
             }
             setFontSizeVal(node.fontSize());
             setFontStyleVal(node.fontStyle() as FontStyle);
+            setFontFamilyVal(node.fontFamily());
+            setFontAlignVal(node.align() as 'left' | 'center' | 'right');
             setSelectActive('text');
         } else {
             setBlurVal(node.blurRadius());
@@ -721,6 +726,42 @@ export const useCanvas = ({
         });
     }, [activeLayers]);
 
+    const setFontFamily = useCallback((fontFamily: string) => {
+        const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
+        setFontFamilyVal(fontFamily);
+        texts.forEach((text) => {
+            (text as Konva.Text).fontFamily(fontFamily);
+        });
+    }, [activeLayers]);
+
+    const setFontHighlightColor = useCallback((fontHighlightColor: string) => {
+        const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
+        setFontHighlightColorVal(fontHighlightColor);
+        texts.forEach((text) => {
+            (text as Konva.Text).fill(fontHighlightColor);
+        });
+    }, [activeLayers]);
+
+    const setFontAlign = useCallback((fontAlign: 'left' | 'center' | 'right') => {
+        const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
+        setFontAlignVal(fontAlign);
+        texts.forEach((text) => {
+            (text as Konva.Text).align(fontAlign);
+        });
+    }, [activeLayers]);
+
+    const setFontHighlightColorVal = useCallback((fontHighlightColor: string) => {
+        setSettings(prev => ({ ...prev, fontHighlightColor }));
+    }, []);
+
+    const setFontAlignVal = useCallback((fontAlign: 'left' | 'center' | 'right') => {
+        setSettings(prev => ({ ...prev, fontAlign }));
+    }, []);
+
+    const setFontFamilyVal = useCallback((fontFamily: string) => {
+        setSettings(prev => ({ ...prev, fontFamily }));
+    }, []);
+
     const setColorStrokeVal = useCallback((color: string) => {
         setSettings(prev => ({ ...prev, colorStoke: color }));
     }, []);
@@ -891,11 +932,15 @@ export const useCanvas = ({
         setFontSize,
         setFontStyle,
         setFontColor,
+        setFontFamily,
+        setFontHighlightColor,
+        setFontAlign,
         selectActive,
         selectionRef,
         selectActiveLayer,
         canvasRef,
         containerRef,
+        transformerRef,
         scale,
         setScale,
         offset,
