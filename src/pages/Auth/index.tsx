@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LogIn, UserPlus, KeyRound } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus, KeyRound, Palette } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import AuthStore from '../../store/AuthStore';
 import Login from './Login';
 import Register from './Register';
@@ -73,45 +73,55 @@ function Authentication({ theme }: AuthenticationProps) {
     };
 
     return (
-        <div className={`min-h-screen ${themeClasses.bg} flex items-center justify-center p-4`}>
-            <div className="max-w-md w-full">
-                <div className={`${themeClasses.card} rounded-2xl shadow-xl p-8`}>
-                    {renderForm()}
+        <div className={`min-h-screen ${themeClasses.bg} flex flex-col`}>
+            <header className={`ps-2 pt-4 pb-3 flex items-center justify-between ${themeClasses.card} border-b`}>
+                <div className="flex items-center gap-4">
+                    <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <Palette className="text-blue-500" size={24}/>
+                        <h1 className={`text-xl font-bold ${themeClasses.text}`}>Photster</h1>
+                    </Link>
+                </div>
+            </header>
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div className="max-w-md w-full">
+                    <div className={`${themeClasses.card} rounded-2xl shadow-xl p-8`}>
+                        {renderForm()}
 
-                    <div className="mt-6 flex items-center justify-center space-x-4">
-                        <button
-                            onClick={() => setFormType('login')}
-                            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
-                                formType === 'login'
-                                    ? themeClasses.button.active
-                                    : themeClasses.button.inactive
-                            }`}
-                        >
-                            <LogIn className="w-5 h-5" />
-                            <span>Login</span>
-                        </button>
-                        <button
-                            onClick={() => setFormType('register')}
-                            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
-                                formType === 'register'
-                                    ? themeClasses.button.active
-                                    : themeClasses.button.inactive
-                            }`}
-                        >
-                            <UserPlus className="w-5 h-5" />
-                            <span>Register</span>
-                        </button>
-                        <button
-                            onClick={() => setFormType('reset')}
-                            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
-                                formType === 'reset'
-                                    ? themeClasses.button.active
-                                    : themeClasses.button.inactive
-                            }`}
-                        >
-                            <KeyRound className="w-5 h-5" />
-                            <span>Reset</span>
-                        </button>
+                        <div className="mt-6 flex items-center justify-center space-x-4">
+                            <button
+                                onClick={() => setFormType('login')}
+                                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
+                                    formType === 'login'
+                                        ? themeClasses.button.active
+                                        : themeClasses.button.inactive
+                                }`}
+                            >
+                                <LogIn className="w-5 h-5" />
+                                <span>Login</span>
+                            </button>
+                            <button
+                                onClick={() => setFormType('register')}
+                                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
+                                    formType === 'register'
+                                        ? themeClasses.button.active
+                                        : themeClasses.button.inactive
+                                }`}
+                            >
+                                <UserPlus className="w-5 h-5" />
+                                <span>Register</span>
+                            </button>
+                            <button
+                                onClick={() => setFormType('reset')}
+                                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
+                                    formType === 'reset'
+                                        ? themeClasses.button.active
+                                        : themeClasses.button.inactive
+                                }`}
+                            >
+                                <KeyRound className="w-5 h-5" />
+                                <span>Reset</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
