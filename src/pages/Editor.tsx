@@ -94,9 +94,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
 
     const {
         layers,
-        activeLayerIndexes,
-        setActiveLayerIndexes,
-        addLayer,
+        activeLayerIndexes, addLayer,
         addLayerForObject,
         removeLayer,
         toggleLayerVisibility,

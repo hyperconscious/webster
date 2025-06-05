@@ -207,21 +207,19 @@ export const useCanvas = ({
 
     const startCreateShape = useCallback((shapeType: ShapeTool, point: Point) => {
         if (shapeRef.current !== null || !activeLayers || shapeType === undefined) return;
-        if (shapeType === 'rectangle') {
-            setToolShape('circle');
-        } else {
-            setToolShape('rectangle');
-        }
-        setToolShape(shapeType);
-        let shape;
+
+        let shape: Konva.Shape | null = null;
+
         addLayerForObject(`Shape ${shapeType} ${layers.length}`, (newLayer) => {
             if (shapeRef.current) return;
+
             switch (shapeType) {
                 case 'line':
                     shape = new Konva.Line({
-                        points: [point.x, point.y],
+                        points: [point.x, point.y, point.x, point.y],
                         stroke: settings.color,
-                        strokeWidth: settings.lineWidth
+                        strokeWidth: settings.lineWidth,
+                        name: 'shape'
                     });
                     break;
                 case 'circle':
@@ -229,16 +227,24 @@ export const useCanvas = ({
                         x: point.x,
                         y: point.y,
                         opacity: settings.opacity / 100,
-                        radius: 0,
-                        fill: settings.color
+                        radius: 1,
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'rectangle':
                     shape = new Konva.Rect({
                         x: point.x,
                         y: point.y,
+                        width: 1,
+                        height: 1,
                         opacity: settings.opacity / 100,
-                        fill: settings.color
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'triangle':
@@ -247,8 +253,11 @@ export const useCanvas = ({
                         y: point.y,
                         opacity: settings.opacity / 100,
                         sides: 3,
-                        radius: 0,
-                        fill: settings.color
+                        radius: 1,
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'polygon':
@@ -257,8 +266,11 @@ export const useCanvas = ({
                         y: point.y,
                         opacity: settings.opacity / 100,
                         sides: 5,
-                        radius: 0,
-                        fill: settings.color
+                        radius: 1,
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'wedge':
@@ -266,22 +278,33 @@ export const useCanvas = ({
                         x: point.x,
                         y: point.y,
                         opacity: settings.opacity / 100,
-                        radius: 0,
-                        angle: 0,
+                        radius: 1,
+                        angle: 5,
                         rotation: 0,
-                        fill: settings.color
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
             }
-            if (!shape) return;
-            shape.name('shape');
-            shape.fillAfterStrokeEnabled(true);
-            newLayer.canvas.add(shape);
 
+            if (!shape) return;
+
+            newLayer.canvas.add(shape);
             shapeRef.current = shape;
             lastPointRef.current = point;
+
+            // Select the new shape immediately
+            const layerIndex = layers.findIndex(l => l.id === newLayer.id);
+            if (layerIndex !== -1) {
+                setLayerIndexes([layerIndex]);
+                transformerRef.current?.nodes([shape]);
+                shape.draggable(true);
+                selectActiveFunc(shape);
+            }
         });
-    }, [lastPointRef, settings]);
+    }, [activeLayers, addLayerForObject, layers, settings]);
 
     const createShape = useCallback((point: Point) => {
         if (!shapeRef.current || !lastPointRef.current) return;
@@ -341,17 +364,29 @@ export const useCanvas = ({
             }
             setSelectActive('object');
         }
-
     });
 
     const setAttrsTransformer = useCallback((node: Konva.Shape | Konva.Image | Konva.Text) => {
+        if (!transformerRef.current) return;
+
         if (node instanceof Konva.Text) {
-            transformerRef.current?.setAttrs({
-                enabledAnchors: ['middle-left', 'middle-right']
+            transformerRef.current.setAttrs({
+                enabledAnchors: ['middle-left', 'middle-right'],
+                boundBoxFunc: (_oldBox: { x: number; y: number; width: number; height: number; }, newBox: { x: number; y: number; width: number; height: number; }) => {
+                    // limit text width scaling
+                    newBox.width = Math.max(30, newBox.width);
+                    return newBox;
+                }
             });
         } else {
-            transformerRef.current?.setAttrs({
-                enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right']
+            transformerRef.current.setAttrs({
+                enabledAnchors: [
+                    'top-left', 'top-right',
+                    'bottom-left', 'bottom-right',
+                    'middle-left', 'middle-right',
+                    'top-center', 'bottom-center'
+                ],
+                rotateEnabled: true
             });
         }
     }, [transformerRef]);
@@ -383,7 +418,6 @@ export const useCanvas = ({
         const shiftPressed = e.evt.shiftKey || e.evt.metaKey;
         const ctrlPressed = e.evt.ctrlKey || e.evt.metaKey;
         const isSelected = activeLayerIndexes.includes(indexLayer);
-
 
         setAttrsTransformer(node as Konva.Shape | Konva.Image | Konva.Text);
         if (transformerRef.current?.nodes()[0] instanceof Konva.Text || node instanceof Konva.Text) {
@@ -457,6 +491,15 @@ export const useCanvas = ({
                 if (!konvaImage) return;
                 konvaImage.name('img');
                 newLayer.canvas.add(konvaImage);
+
+                // Select the new image immediately
+                const layerIndex = layers.findIndex(l => l.id === newLayer.id);
+                if (layerIndex !== -1) {
+                    setLayerIndexes([layerIndex]);
+                    transformerRef.current?.nodes([konvaImage]);
+                    konvaImage.draggable(true);
+                    selectActiveFunc(konvaImage);
+                }
             });
             URL.revokeObjectURL(urlImage);
             createHistorySnapshot(layers);
@@ -465,9 +508,7 @@ export const useCanvas = ({
     }, [activeLayers]);
 
     const createText = useCallback((point: Point) => {
-        textRef.current = null;
         addLayerForObject(`Text ${layers.length}`, (newLayer) => {
-            if (textRef.current) return;
             const text = new Konva.Text({
                 x: point.x,
                 y: point.y,
@@ -475,20 +516,67 @@ export const useCanvas = ({
                 fontSize: settings.fontSize,
                 fontFamily: 'Arial',
                 fill: settings.fontColor,
-                fontStyle: settings.fontStyle
+                fontStyle: settings.fontStyle,
+                width: 200,
+                name: 'text'
             });
-            text.name('text');
-            textRef.current = text;
 
-            text.on('transform', function () {
-                text.setAttrs({
-                    width: text.width() * text.scaleX(),
-                    scaleX: 1,
-                });
-            });
+            textRef.current = text;
             newLayer.canvas.add(text);
+
+            // Select the new text immediately
+            const layerIndex = layers.findIndex(l => l.id === newLayer.id);
+            if (layerIndex !== -1) {
+                setLayerIndexes([layerIndex]);
+                transformerRef.current?.nodes([text]);
+                text.draggable(true);
+                selectActiveFunc(text);
+            }
+
+            // Start editing immediately
+            const stage = text.getStage();
+            if (!stage) return;
+
+            text.visible(false);
+            transformerRef.current?.visible(false);
+
+            const textarea = document.createElement('textarea');
+            textarea.value = '';
+            textarea.style.position = 'absolute';
+
+            const rect = text.getClientRect({ relativeTo: stage });
+            const containerRect = stage.container().getBoundingClientRect();
+
+            textarea.style.left = `${containerRect.left + (rect.x * scale)}px`;
+            textarea.style.top = `${containerRect.top + (rect.y * scale)}px`;
+            textarea.style.width = `${Math.max(200, rect.width) * scale}px`;
+            textarea.style.height = `${rect.height * scale}px`;
+            textarea.style.border = 'none';
+            textarea.style.padding = '0px';
+            textarea.style.margin = '0px';
+            textarea.style.overflow = 'hidden';
+            textarea.style.background = 'none';
+            textarea.style.outline = 'none';
+            textarea.style.resize = 'none';
+            textarea.style.fontFamily = text.fontFamily();
+            textarea.style.transformOrigin = 'left top';
+            textarea.style.textAlign = text.align();
+            textarea.style.color = text.fill().toString();
+            textarea.style.fontSize = `${text.fontSize() * scale}px`;
+            textarea.style.fontStyle = text.fontStyle();
+            textarea.style.lineHeight = text.lineHeight().toString();
+
+            document.body.appendChild(textarea);
+            textarea.focus();
+
+            textarea.addEventListener('blur', () => {
+                text.text(textarea.value);
+                document.body.removeChild(textarea);
+                text.visible(true);
+                transformerRef.current?.visible(true);
+                createHistorySnapshot(layers);
+            });
         });
-        createHistorySnapshot(layers);
     }, [addLayerForObject, settings, createHistorySnapshot]);
 
     const textEdit = useCallback((point: Point, e: Konva.KonvaEventObject<MouseEvent>) => {
