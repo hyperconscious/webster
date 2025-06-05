@@ -7,7 +7,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import UserService from '../services/UserService';
 import { useForm } from 'react-hook-form';
 import { type UpdateUserData, updateUserDto } from '../validation/schemas';
-import { joiResolver } from '@hookform/resolvers/joi';
+import { zodResolver } from '@hookform/resolvers/zod';
 import InputField from '../components/InputField';
 import { notifyError, notifySuccess } from '../utils/notification';
 import config from '../config/env.config';
@@ -33,7 +33,7 @@ export const Profile: React.FC<ProfileProps> = ({ theme }) => {
         reset,
         formState: { errors },
     } = useForm<UpdateUserData>({
-        resolver: joiResolver(updateUserDto),
+        resolver: zodResolver(updateUserDto),
     });
 
     const onDrop = async (acceptedFiles: File[]) => {
@@ -78,12 +78,12 @@ export const Profile: React.FC<ProfileProps> = ({ theme }) => {
             const isCredentials = await UserService.verifyCredential(user.id, currentPassword);
             console.log('isCredentials', isCredentials);
             if (!isCredentials) {
-                notifyError('Неверный текущий пароль');
+                notifyError('Current password is incorrect');
                 return;
             }
-            notifySuccess('Пароль змінено');
+            notifySuccess('Password is changed successfully');
         } catch (e) {
-            notifyError('Помилка зміни пароля');
+            notifyError('Password change failed');
         }
     };
 
@@ -199,14 +199,15 @@ export const Profile: React.FC<ProfileProps> = ({ theme }) => {
                                     src={`${config.BACKEND_URL}${user.avatar}`}
                                     alt="Profile"
                                     className="w-24 h-24 rounded-full object-cover"
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.parentElement?.querySelector('.avatar-placeholder')?.classList.remove('hidden');
+                                    }}
                                 />
-                            ) : (
-                                <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center">
-                                    <span className="text-white text-2xl font-semibold">
-                                        {getInitials(user.full_name)}
-                                    </span>
-                                </div>
-                            )}
+                            ) : null}
+                            <div className={`w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center avatar-placeholder ${user.avatar ? 'hidden' : ''}`}>
+                                <User className="w-12 h-12 text-gray-500 dark:text-gray-400" />
+                            </div>
                             <div
                                 {...getRootProps()}
                                 className="absolute bottom-0 right-0 p-2 bg-blue-500 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"

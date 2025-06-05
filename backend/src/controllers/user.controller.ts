@@ -134,6 +134,25 @@ export class UserController {
       .json({ message: 'Avatar uploaded successfully.', data: updatedUser });
   }
 
+  public static async verifyCredential(req: Request, res: Response) {
+    const userId = Number(req.params.user_id) || req.user?.id!;
+    if (userId === undefined) {
+      throw new UnauthorizedError('You need to be logged in.');
+    }
+    const user = await UserController.userService.getUserById(userId);
+    if (!user) {
+      throw new BadRequestError('User not found.');
+    }
+    const { credential } = req.body;
+    if (!credential) {
+      throw new BadRequestError('Password is required.');
+    }
+    if (user.password === credential) {
+      return res.status(StatusCodes.OK).json(true);
+    } else {
+      return res.status(StatusCodes.OK).json(false);
+    }
+  }
 
   public static async deleteUser(req: Request, res: Response) {
     if (!req.user) {

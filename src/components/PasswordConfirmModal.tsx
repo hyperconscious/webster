@@ -50,7 +50,7 @@ export default function PasswordModal({ open, onClose, onConfirm, theme = 'light
 
     const handleConfirm = () => {
         if (!password.trim()) {
-            setError('Введіть поточний пароль');
+            setError('Enter your current password');
             return;
         }
         setError('');
@@ -62,9 +62,9 @@ export default function PasswordModal({ open, onClose, onConfirm, theme = 'light
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
             <div className={`${themeClasses.bg} rounded-lg shadow-lg w-full max-w-sm p-6 relative`}>
-                <h2 className={`text-xl font-semibold ${themeClasses.text} mb-4`}>Підтвердження пароля</h2>
+                <h2 className={`text-xl font-semibold ${themeClasses.text} mb-4`}>Password confirmation</h2>
 
-                <label className={`block text-sm ${themeClasses.label} mb-1`}>Поточний пароль</label>
+                <label className={`block text-sm ${themeClasses.label} mb-1`}>Current password</label>
                 <input
                     type="password"
                     className={`w-full border ${themeClasses.input} rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500`}
@@ -79,13 +79,13 @@ export default function PasswordModal({ open, onClose, onConfirm, theme = 'light
                         onClick={onClose}
                         className={`px-4 py-2 rounded ${themeClasses.cancelButton}`}
                     >
-                        Скасувати
+                        Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
                         className={`px-4 py-2 rounded ${themeClasses.confirmButton}`}
                     >
-                        Підтвердити
+                        Confirm
                     </button>
                 </div>
             </div>
