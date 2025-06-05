@@ -31,6 +31,7 @@ function Authentication({ theme }: AuthenticationProps) {
                     bg: 'bg-gray-50',
                     card: 'bg-white',
                     text: 'text-gray-900',
+                    border: 'border-gray-200',
                     button: {
                         active: 'bg-blue-50 text-blue-600',
                         inactive: 'text-gray-600 hover:bg-gray-100'
@@ -41,6 +42,7 @@ function Authentication({ theme }: AuthenticationProps) {
                     bg: 'bg-blue-950',
                     card: 'bg-blue-900',
                     text: 'text-white',
+                    border: 'border-blue-800',
                     button: {
                         active: 'bg-blue-800/20 text-blue-400',
                         inactive: 'text-gray-300 hover:bg-blue-800'
@@ -51,6 +53,7 @@ function Authentication({ theme }: AuthenticationProps) {
                     bg: 'bg-gray-900',
                     card: 'bg-gray-800',
                     text: 'text-white',
+                    border: 'border-gray-700',
                     button: {
                         active: 'bg-gray-700/20 text-gray-300',
                         inactive: 'text-gray-300 hover:bg-gray-700'
@@ -74,7 +77,7 @@ function Authentication({ theme }: AuthenticationProps) {
 
     return (
         <div className={`min-h-screen ${themeClasses.bg} flex flex-col`}>
-            <header className={`ps-2 pt-4 pb-3 flex items-center justify-between ${themeClasses.card} border-b`}>
+            <header className={`ps-2 pt-4 pb-3 flex items-center justify-between ${themeClasses.card} border-b ${themeClasses.border}`}>
                 <div className="flex items-center gap-4">
                     <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                         <Palette className="text-blue-500" size={24}/>
