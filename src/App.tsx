@@ -15,8 +15,8 @@ import ProjectsPage from './pages/ProjectsPage.tsx';
 import { useState } from 'react';
 import type { Theme } from './types/index.ts';
 import NotFound from './pages/NotFound.tsx';
-import Profile from "./pages/Profile.tsx";
 import { UserProvider } from "./context/UserContext.tsx";
+import Profile from './pages/Profile.tsx';
 
 function App() {
     const [theme, setTheme] = useState<Theme>('light');
@@ -29,10 +29,10 @@ function App() {
                         <Route path='/projects' element={<ProjectsPage theme={theme} setTheme={setTheme} />} />
                         <Route path="/projects/:slug" element={<Editor theme={theme} setTheme={setTheme} />} />
                         <Route path="/editor" element={<Editor theme={theme} setTheme={setTheme} />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/auth" element={<Authentcation />} />
-                        <Route path="/auth/verify-email" element={<EmailVerificationPage />} />
-                        <Route path="/auth/reset-password" element={<PasswordResetPage />} />
+                        <Route path="/profile" element={<Profile theme={theme} setTheme={setTheme} />} />
+                        <Route path="/auth" element={<Authentcation theme={theme} />} />
+                        <Route path="/auth/verify-email" element={<EmailVerificationPage theme={theme} />} />
+                        <Route path="/auth/reset-password" element={<PasswordResetPage theme={theme} />} />
                         <Route path="*" element={<NotFound theme={theme} />} />
                     </Routes>
                     <Toaster />

@@ -16,7 +16,7 @@ export interface CommentSortOption {
 export interface QueryOptions {
     page?: number;
     limit?: number;
-    sortField?: string;
+    sortBy?: string;
     sortDirection?: 'ASC' | 'DESC';
     filters?: IProjectFilters;
     search?: string;

@@ -26,4 +26,6 @@ userRouter.patch('/:user_id', authOwnerOrAdmin, UserController.updateUser);
 
 userRouter.delete('/:user_id', authOwnerOrAdmin, UserController.deleteUser);
 
+userRouter.post('/:user_id/verifyCredential', authOwnerOrAdmin, UserController.verifyCredential);
+
 export default userRouter;

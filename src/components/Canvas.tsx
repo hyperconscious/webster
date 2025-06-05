@@ -7,6 +7,13 @@ import { ZoomIn, ZoomOut, MousePointer, Share2, Clipboard, Loader } from 'lucide
 import config from '../config/env.config';
 import { notifyError, notifySuccess } from '../utils/notification';
 
+interface IHistoryItem {
+    id: string;
+    timestamp: Date;
+    action: string;
+    snapshot: any;
+}
+
 interface CanvasProps {
     width: number;
     height: number;
@@ -37,6 +44,7 @@ interface CanvasProps {
     offset: { x: number; y: number };
     setOffset: (value: React.SetStateAction<{ x: number; y: number }>) => void;
     screenToCanvas: (x: number, y: number) => Point;
+    addHistoryItem: (action: string, snapshot: any) => void;
 }
 
 const Canvas: React.FC<CanvasProps> = ({
@@ -68,7 +76,8 @@ const Canvas: React.FC<CanvasProps> = ({
     setScale,
     offset,
     setOffset,
-    screenToCanvas
+    screenToCanvas,
+    addHistoryItem
 }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -467,6 +476,14 @@ const Canvas: React.FC<CanvasProps> = ({
             setIsDrawing(false);
         } else if (settings.tool === 'shapes' && settings.shapeTool) {
             stopCreateShape();
+            const snapshot = {
+                layers: layers.map(layer => ({
+                    ...layer,
+                    canvasJSON: layer.canvas.toJSON()
+                })),
+                timestamp: new Date()
+            };
+            addHistoryItem(`${settings.shapeTool} created`, snapshot);
         } else if (settings.tool === 'select' && selectionRef.current && selectionRef.current.visible()) {
             //selectEnd();
         }

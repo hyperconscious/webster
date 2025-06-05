@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { LogIn, UserPlus, KeyRound } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus, KeyRound, Palette } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import AuthStore from '../../store/AuthStore';
 import Login from './Login';
 import Register from './Register';
 import Reset from './Reset';
+import type { Theme } from '../../types';
 
 type FormType = 'login' | 'register' | 'reset';
 
-function Authentication() {
+interface AuthenticationProps {
+    theme: Theme;
+}
+
+function Authentication({ theme }: AuthenticationProps) {
     const [formType, setFormType] = useState<FormType>('login');
     const navigate = useNavigate();
     const [tokens] = useState(AuthStore.getTokens());
@@ -19,55 +24,107 @@ function Authentication() {
         }
     }, [tokens, navigate]);
 
+    const getThemeClasses = () => {
+        switch (theme) {
+            case 'light':
+                return {
+                    bg: 'bg-gray-50',
+                    card: 'bg-white',
+                    text: 'text-gray-900',
+                    border: 'border-gray-200',
+                    button: {
+                        active: 'bg-blue-50 text-blue-600',
+                        inactive: 'text-gray-600 hover:bg-gray-100'
+                    }
+                };
+            case 'blue':
+                return {
+                    bg: 'bg-blue-950',
+                    card: 'bg-blue-900',
+                    text: 'text-white',
+                    border: 'border-blue-800',
+                    button: {
+                        active: 'bg-blue-800/20 text-blue-400',
+                        inactive: 'text-gray-300 hover:bg-blue-800'
+                    }
+                };
+            default:
+                return {
+                    bg: 'bg-gray-900',
+                    card: 'bg-gray-800',
+                    text: 'text-white',
+                    border: 'border-gray-700',
+                    button: {
+                        active: 'bg-gray-700/20 text-gray-300',
+                        inactive: 'text-gray-300 hover:bg-gray-700'
+                    }
+                };
+        }
+    };
+
+    const themeClasses = getThemeClasses();
+
     const renderForm = () => {
         switch (formType) {
             case 'login':
-                return <Login />
+                return <Login theme={theme} />
             case 'register':
-                return <Register />
+                return <Register theme={theme} />
             case 'reset':
-                return <Reset />
+                return <Reset theme={theme} />
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-            <div className="max-w-md w-full">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className={`min-h-screen ${themeClasses.bg} flex flex-col`}>
+            <header className={`ps-2 pt-4 pb-3 flex items-center justify-between ${themeClasses.card} border-b ${themeClasses.border}`}>
+                <div className="flex items-center gap-4">
+                    <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <Palette className="text-blue-500" size={24}/>
+                        <h1 className={`text-xl font-bold ${themeClasses.text}`}>Photster</h1>
+                    </Link>
+                </div>
+            </header>
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div className="max-w-md w-full">
+                    <div className={`${themeClasses.card} rounded-2xl shadow-xl p-8`}>
+                        {renderForm()}
 
-                    {renderForm()}
-
-                    <div className="mt-6 flex items-center justify-center space-x-4">
-                        <button
-                            onClick={() => setFormType('login')}
-                            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${formType === 'login'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        <div className="mt-6 flex items-center justify-center space-x-4">
+                            <button
+                                onClick={() => setFormType('login')}
+                                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
+                                    formType === 'login'
+                                        ? themeClasses.button.active
+                                        : themeClasses.button.inactive
                                 }`}
-                        >
-                            <LogIn className="w-5 h-5" />
-                            <span>Login</span>
-                        </button>
-                        <button
-                            onClick={() => setFormType('register')}
-                            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${formType === 'register'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            >
+                                <LogIn className="w-5 h-5" />
+                                <span>Login</span>
+                            </button>
+                            <button
+                                onClick={() => setFormType('register')}
+                                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
+                                    formType === 'register'
+                                        ? themeClasses.button.active
+                                        : themeClasses.button.inactive
                                 }`}
-                        >
-                            <UserPlus className="w-5 h-5" />
-                            <span>Register</span>
-                        </button>
-                        <button
-                            onClick={() => setFormType('reset')}
-                            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${formType === 'reset'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            >
+                                <UserPlus className="w-5 h-5" />
+                                <span>Register</span>
+                            </button>
+                            <button
+                                onClick={() => setFormType('reset')}
+                                className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition duration-200 ${
+                                    formType === 'reset'
+                                        ? themeClasses.button.active
+                                        : themeClasses.button.inactive
                                 }`}
-                        >
-                            <KeyRound className="w-5 h-5" />
-                            <span>Reset</span>
-                        </button>
+                            >
+                                <KeyRound className="w-5 h-5" />
+                                <span>Reset</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

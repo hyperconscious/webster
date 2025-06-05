@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Palette,
     Sun,
@@ -14,11 +14,12 @@ import {
     LogOut,
     CornerDownLeft, UserRound, LogIn
 } from 'lucide-react';
-import type {Theme, CanvasSize} from '../types';
-import {useNavigate, Link} from 'react-router-dom';
+import type { Theme, CanvasSize } from '../types';
+import { useNavigate, Link } from 'react-router-dom';
 import ProjectService from '../services/ProjectService';
-import {useUser} from '../hooks/useUser';
+import { useUser } from '../hooks/useUser';
 import AuthStore from '../store/AuthStore';
+import { set } from 'zod';
 
 interface MenuItem {
     label: string;
@@ -48,41 +49,69 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
-                                           theme,
-                                           setTheme,
-                                           presetSizes,
-                                           onSizeChange,
-                                           currentWidth,
-                                           currentHeight,
-                                           projectSlug,
-                                           initialProjectName,
-                                           onSaveProject,
-                                           setNewProjectName,
-                                           onAddTemplate,
-                                           setShowHistoryModal,
-                                           onExportPNG,
-                                           onExportJPEG,
-                                           onExportSVG,
-                                           onExportPDF
-                                       }) => {
+    theme,
+    setTheme,
+    presetSizes,
+    onSizeChange,
+    currentWidth,
+    currentHeight,
+    projectSlug,
+    initialProjectName,
+    onSaveProject,
+    setNewProjectName,
+    onAddTemplate,
+    setShowHistoryModal,
+    onExportPNG,
+    onExportJPEG,
+    onExportSVG,
+    onExportPDF
+}) => {
     const [showSizeMenu, setShowSizeMenu] = useState(false);
     const navigate = useNavigate();
     const sizeMenuRef = useRef<HTMLDivElement>(null);
     const [projectName, setProjectName] = useState(initialProjectName || 'Untitled');
     const [editingName, setEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const [isOpen, setIsOpen] = useState(false);
-    const isOpenRef = useRef<HTMLDivElement>(null);
-    const {user} = useUser();
+    const [isOpenFile, setIsOpenFile] = useState(false);
+    const isOpenRefFile = useRef<HTMLDivElement>(null);
+    const [isOpenProfile, setIsOpenProfile] = useState(false);
+    const isOpenRefProfile = useRef<HTMLDivElement>(null);
+    const { user } = useUser();
 
-    const menuItems: MenuItem[] = [
-        {label: "Add this template", icon: <BookDashed size={16}/>, onClick: () => onAddTemplate?.()},
-        {label: "Save as...", icon: <Save size={16}/>, shortcut: "Ctrl+Shift+S", onClick: () => onExportPNG?.()},
-        {label: "History", icon: <History size={16}/>, onClick: () => setShowHistoryModal?.(true)},
-        {label: "Export as PNG", icon: <File size={16}/>, divider: true, onClick: () => onExportPNG?.()},
-        {label: "Export as JPEG", icon: <File size={16}/>, onClick: () => onExportJPEG?.()},
-        {label: "Export as SVG", icon: <File size={16}/>, onClick: () => onExportSVG?.()},
-        {label: "Export as PDF", icon: <File size={16}/>, onClick: () => onExportPDF?.()},
+    const menuItemsFile: MenuItem[] = [
+        { label: "Add this template", icon: <BookDashed size={16} />, onClick: () => onAddTemplate?.() },
+        { label: "Save as...", icon: <Save size={16} />, shortcut: "Ctrl+Shift+S", onClick: () => onExportPNG?.() },
+        { label: "History", icon: <History size={16} />, onClick: () => setShowHistoryModal?.(true) },
+        { label: "Export as PNG", icon: <File size={16} />, divider: true, onClick: () => onExportPNG?.() },
+        { label: "Export as JPEG", icon: <File size={16} />, onClick: () => onExportJPEG?.() },
+        { label: "Export as SVG", icon: <File size={16} />, onClick: () => onExportSVG?.() },
+        { label: "Export as PDF", icon: <File size={16} />, onClick: () => onExportPDF?.() },
+    ];
+
+    const menuItemsProfile: MenuItem[] = [
+        ...(user
+            ? [
+                {
+                    label: "Profile",
+                    icon: <UserRound size={16} />,
+                    onClick: () => navigate('/profile')
+                },
+                {
+                    label: "Log out",
+                    icon: <BookDashed size={16} />,
+                    onClick: () => {
+                        AuthStore.removeTokens();
+                        navigate('/auth');
+                    }
+                }
+            ]
+            : [
+                {
+                    label: "Sign in",
+                    icon: <UserRound size={16} />,
+                    onClick: () => navigate('/auth')
+                }
+            ]),
     ];
 
     useEffect(() => {
@@ -90,8 +119,11 @@ const Header: React.FC<HeaderProps> = ({
             if (sizeMenuRef.current && !sizeMenuRef.current.contains(event.target as Node)) {
                 setShowSizeMenu(false);
             }
-            if (isOpenRef.current && !isOpenRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
+            if (isOpenRefFile.current && !isOpenRefFile.current.contains(event.target as Node)) {
+                setIsOpenFile(false);
+            }
+            if (isOpenRefProfile.current && !isOpenRefProfile.current.contains(event.target as Node)) {
+                setIsOpenProfile(false);
             }
         };
 
@@ -140,13 +172,13 @@ const Header: React.FC<HeaderProps> = ({
             return;
         }
         onSaveProject?.();
-        await ProjectService.updateProject(projectSlug, {name: projectName});
+        await ProjectService.updateProject(projectSlug, { name: projectName });
     };
     return (
         <header className={`p-2 flex items-center justify-between ${themeClasses.bg}`}>
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                    <Palette className="text-blue-500" size={24}/>
+                    <Palette className="text-blue-500" size={24} />
                     <h1 className="text-xl font-bold">Photster</h1>
                 </div>
 
@@ -169,7 +201,7 @@ const Header: React.FC<HeaderProps> = ({
                             className={`px-2 py-1 rounded-md text-base border outline-none transition-all w-48 ${theme === 'light'
                                 ? 'bg-white border-gray-300 text-gray-700'
                                 : 'bg-gray-700 border-gray-600 text-white'
-                            }`}
+                                }`}
                             autoFocus
                         />
                     ) : (
@@ -186,34 +218,34 @@ const Header: React.FC<HeaderProps> = ({
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
                             ? ' text-gray-700 hover:bg-gray-200'
                             : ' text-gray-300 hover:bg-gray-700'
-                        }`}
+                            }`}
                         title="Save Project"
                     >
-                        <Save size={18}/>
+                        <Save size={18} />
                     </button>
 
                     <div className={`w-px h-8 ${themeClasses.divider}`}></div>
 
-                    <div ref={isOpenRef} className="relative">
+                    <div ref={isOpenRefFile} className="relative">
                         <button
-                            onClick={() => setIsOpen(!isOpen)}
+                            onClick={() => setIsOpenFile(!isOpenFile)}
                             className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center gap-2"
                         >
-                            <File size={16}/>
+                            <File size={16} />
                             <span>File</span>
-                            <ChevronDown size={16}/>
+                            <ChevronDown size={16} />
                         </button>
 
-                        {isOpen && (
+                        {isOpenFile && (
                             <div
                                 className="absolute left-0 top-full mt-1 w-56 bg-white shadow-lg rounded-md py-1 z-10 border border-gray-200">
-                                {menuItems.map((item, index) => (
+                                {menuItemsFile.map((item, index) => (
                                     <React.Fragment key={index}>
-                                        {item.divider && index > 0 && <div className="border-t border-gray-200 my-1"/>}
+                                        {item.divider && index > 0 && <div className="border-t border-gray-200 my-1" />}
                                         <button
                                             onClick={() => {
                                                 item.onClick?.();
-                                                setIsOpen(false);
+                                                setIsOpenFile(false);
                                             }}
                                             className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
                                         >
@@ -242,12 +274,12 @@ const Header: React.FC<HeaderProps> = ({
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
                             ? 'text-gray-700 hover:bg-gray-200'
                             : 'text-gray-300 hover:bg-gray-700'
-                        }`}
+                            }`}
                         title="Open Projects"
                     >
-                        <FolderOpen size={18}/>
+                        <FolderOpen size={18} />
                         Projects
-                        <CornerDownLeft size={16}/>
+                        <CornerDownLeft size={16} />
                     </Link>
                 </div>
             </div>
@@ -258,10 +290,10 @@ const Header: React.FC<HeaderProps> = ({
                     className={`p-2 rounded-lg transition-colors ${theme === 'light'
                         ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                    }`}
+                        }`}
                     title='Change Theme'
                 >
-                    {theme === 'light' ? <Sun size={20}/> : theme === "blue" ? <Cloud size={20}/> : <Moon size={20}/>}
+                    {theme === 'light' ? <Sun size={20} /> : theme === "blue" ? <Cloud size={20} /> : <Moon size={20} />}
                 </button>
 
                 <div className="relative">
@@ -270,11 +302,11 @@ const Header: React.FC<HeaderProps> = ({
                         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${theme === 'light'
                             ? ' bg-gray-100 text-gray-700 hover:bg-gray-200'
                             : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                        }`}
+                            }`}
                         title='Change Canvas Size'
                     >
                         <span className="text-sm">{currentWidth} × {currentHeight}</span>
-                        <ChevronDown size={16}/>
+                        <ChevronDown size={16} />
                     </button>
 
                     {showSizeMenu && (
@@ -283,7 +315,7 @@ const Header: React.FC<HeaderProps> = ({
                             className={`absolute top-full right-0 mt-2 w-72 p-2 rounded-xl border shadow-xl z-50 ${theme === 'light'
                                 ? 'bg-white border-gray-300'
                                 : 'bg-gray-800 border-gray-700'
-                            }`}
+                                }`}
                         >
                             <div className="space-y-1">
                                 {presetSizes.map((size, index) => (
@@ -292,7 +324,7 @@ const Header: React.FC<HeaderProps> = ({
                                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${theme === 'light'
                                             ? 'hover:bg-gray-300'
                                             : 'hover:bg-gray-700'
-                                        }`}
+                                            }`}
                                         onClick={() => {
                                             onSizeChange(size.width, size.height);
                                             setShowSizeMenu(false);
@@ -300,7 +332,7 @@ const Header: React.FC<HeaderProps> = ({
                                     >
                                         <div className="font-medium">{size.label}</div>
                                         <div className={`text-xs ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'
-                                        }`}>
+                                            }`}>
                                             {size.width} × {size.height}
                                         </div>
                                     </button>
@@ -309,51 +341,44 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                     )}
                 </div>
-                {user ?
-                    <div className={`flex gap-3`}>
-                        <button
-                            onClick={() => {
-                                navigate('/profile');
-                            }}
-                            className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            }`}
-                            title="Profile"
-                        >
-                            <User size={20}/>
-                        </button>
 
-                        <button
-                            onClick={() => {
-                                AuthStore.removeTokens();
-                                navigate('/auth');
-                            }}
-                            className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            }`}
-                            title="Logout"
-                        >
-                            <LogOut size={20}/>
-                        </button>
-                    </div>
-                    :
-                    <div>
-                        <button
-                            onClick={() => {
-                                navigate('/auth');
-                            }}
-                            className={`p-2 rounded-lg transition-colors ${theme === 'light'
-                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            }`}
-                            title="Logout"
-                        >
-                            <LogIn size={20}/>
-                        </button>
-                    </div>
-                }
+                <button
+                    onClick={setIsOpenProfile ? () => setIsOpenProfile(!isOpenProfile) : undefined}
+                    className={`relative p-2 rounded-lg transition-colors ${theme === 'light'
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        }`}
+                    title='Change Theme'
+                >
+                    <User size={20} />
+
+                    {isOpenProfile && (
+                        <div
+                            className="absolute -left-28 top-full mt-1 w-36 bg-white shadow-lg rounded-md py-1 z-10 border border-gray-200">
+                            {menuItemsProfile.map((item, index) => (
+                                <React.Fragment key={index}>
+                                    {item.divider && index > 0 && <div className="border-t border-gray-200 my-1" />}
+                                    <button
+                                        onClick={() => {
+                                            item.onClick?.();
+                                            setIsOpenProfile(false);
+                                        }}
+                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {item.icon}
+                                            <span>{item.label}</span>
+                                        </div>
+                                        {item.shortcut &&
+                                            <span className="text-xs text-gray-500">{item.shortcut}</span>}
+                                    </button>
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    )}
+                </button>
+
+
             </div>
         </header>
     );

@@ -23,11 +23,6 @@ class UserService {
         return response.data.data;
     }
 
-    static async getUserAttendedEvents(userId: number, query: QueryOptions): Promise<PaginatedResponse<Event>> {
-        const response = await axios.get(`/api/users/${userId}/attendedEvents`, { params: query });
-        return response.data;
-    }
-
     static async updateUserProfile(userId: number, data: Partial<User>): Promise<User> {
         const response = await axios.patch(`/api/users/${userId}`, data);
         return response.data;
