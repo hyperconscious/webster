@@ -368,7 +368,6 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
         try {
             const stage = layers[0].canvas.getStage();
             if (!stage) return;
-
             // Create a temporary stage for merging all visible layers
             const tempStage = new Konva.Stage({
                 container: document.createElement('div'),
