@@ -10,8 +10,13 @@ import AuthStore from '../../store/AuthStore';
 import { notifyDismiss, notifyLoading, notifySuccess } from '../../utils/notification';
 import { GoogleAuthButton } from "../../components/GoogleAuthButton.tsx";
 import { UserContext } from '../../context/UserContext';
+import type { Theme } from '../../types';
 
-function Login() {
+interface LoginProps {
+    theme: Theme;
+}
+
+function Login({ theme }: LoginProps) {
     const navigate = useNavigate();
     const [tokens, setTokens] = useState(AuthStore.getTokens);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -48,10 +53,35 @@ function Login() {
         }
     };
 
+    const getThemeClasses = () => {
+        switch (theme) {
+            case 'light':
+                return {
+                    text: 'text-gray-900',
+                    subtext: 'text-gray-600',
+                    button: 'bg-blue-600 hover:bg-blue-700 text-white'
+                };
+            case 'blue':
+                return {
+                    text: 'text-white',
+                    subtext: 'text-gray-300',
+                    button: 'bg-blue-600 hover:bg-blue-700 text-white'
+                };
+            default:
+                return {
+                    text: 'text-white',
+                    subtext: 'text-gray-300',
+                    button: 'bg-gray-700 hover:bg-gray-600 text-white'
+                };
+        }
+    };
+
+    const themeClasses = getThemeClasses();
+
     return (
         <div ref={containerRef}>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome back</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-8">Please enter your details to sign in</p>
+            <h2 className={`text-2xl font-bold ${themeClasses.text} mb-2`}>Welcome back</h2>
+            <p className={`${themeClasses.subtext} mb-8`}>Please enter your details to sign in</p>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
                 <InputField
                     label="Email or Login"
@@ -60,6 +90,7 @@ function Login() {
                     icon={<Mail />}
                     placeholder="Email or Login"
                     error={errors.loginOrEmail?.message}
+                    theme={theme}
                 />
                 <InputField
                     label="Password"
@@ -68,10 +99,11 @@ function Login() {
                     icon={<Lock />}
                     placeholder="Password"
                     error={errors.password?.message}
+                    theme={theme}
                 />
                 <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2"
+                    className={`w-full ${themeClasses.button} font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2`}
                 >
                     <span>Sign in</span>
                     <ArrowRight className="w-5 h-5" />

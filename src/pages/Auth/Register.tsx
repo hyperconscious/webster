@@ -18,10 +18,13 @@ interface Country {
     flag: string;
 }
 
-function Register() {
+interface RegisterProps {
+    theme: Theme;
+}
+
+function Register({ theme }: RegisterProps) {
     const navigate = useNavigate();
     const [countries, setCountries] = useState<Country[]>([]);
-    const [theme, setTheme] = useState<Theme>('light');
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -80,18 +83,65 @@ function Register() {
     const getThemeClasses = () => {
         switch (theme) {
             case 'light':
-                return 'bg-white-100 text-gray-900';
+                return {
+                    text: 'text-gray-900',
+                    subtext: 'text-gray-600',
+                    button: 'bg-blue-600 hover:bg-blue-700 text-white',
+                    select: {
+                        bg: '#ffffff',
+                        border: '#e2e8f0',
+                        text: '#000000',
+                        shadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        option: {
+                            selected: '#3182ce',
+                            focused: 'white',
+                            default: '#edf2f7'
+                        }
+                    }
+                };
             case 'blue':
-                return 'bg-blue-950 text-white';
+                return {
+                    text: 'text-white',
+                    subtext: 'text-gray-300',
+                    button: 'bg-blue-600 hover:bg-blue-700 text-white',
+                    select: {
+                        bg: '#1e3a8a',
+                        border: '#1e40af',
+                        text: '#ffffff',
+                        shadow: '0 2px 4px rgba(30, 58, 138, 0.3)',
+                        option: {
+                            selected: '#2563eb',
+                            focused: '#1e3a8a',
+                            default: '#1e40af'
+                        }
+                    }
+                };
             default:
-                return 'bg-gray-900 text-white';
+                return {
+                    text: 'text-white',
+                    subtext: 'text-gray-300',
+                    button: 'bg-gray-700 hover:bg-gray-600 text-white',
+                    select: {
+                        bg: '#2d3748',
+                        border: '#4a5568',
+                        text: '#ffffff',
+                        shadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
+                        option: {
+                            selected: '#4a5568',
+                            focused: 'black',
+                            default: '#2d3748'
+                        }
+                    }
+                };
         }
     };
 
+    const themeClasses = getThemeClasses();
+
     return (
-        <div ref={containerRef} className={`${getThemeClasses()}`}>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Create an account</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-8">Fill in your details to get started</p>
+        <div ref={containerRef}>
+            <h2 className={`text-2xl font-bold ${themeClasses.text} mb-2`}>Create an account</h2>
+            <p className={`${themeClasses.subtext} mb-8`}>Fill in your details to get started</p>
             <form onSubmit={handleSubmit(onSubmit)} className="space-x-1 grid grid-cols-1 md:grid-cols-2 gap-2" noValidate>
                 <div>
                     <InputField
@@ -101,6 +151,7 @@ function Register() {
                         icon={<User />}
                         placeholder="Enter your login"
                         error={errors.login?.message}
+                        theme={theme}
                     />
                 </div>
                 <div>
@@ -111,6 +162,7 @@ function Register() {
                         icon={<User />}
                         placeholder="Enter your full name"
                         error={errors.full_name?.message}
+                        theme={theme}
                     />
                 </div>
                 <div className="col-span-2">
@@ -121,6 +173,7 @@ function Register() {
                         icon={<Mail />}
                         placeholder="Enter your email"
                         error={errors.email?.message}
+                        theme={theme}
                     />
                 </div>
                 <div>
@@ -131,6 +184,7 @@ function Register() {
                         icon={<Lock />}
                         placeholder="Create a password"
                         error={errors.password?.message}
+                        theme={theme}
                     />
                 </div>
                 <div>
@@ -141,10 +195,11 @@ function Register() {
                         icon={<Lock />}
                         placeholder="Confirm your password"
                         error={errors.passwordConfirmation?.message}
+                        theme={theme}
                     />
                 </div>
                 <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    <label className={`block text-sm font-medium ${themeClasses.text} mb-1`}>
                         Country
                     </label>
                     <Controller
@@ -158,25 +213,25 @@ function Register() {
                                 styles={{
                                     control: (baseStyles) => ({
                                         ...baseStyles,
-                                        backgroundColor: theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e3a8a' : '#ffffff',
-                                        borderColor: theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#1e40af' : '#e2e8f0',
-                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000',
+                                        backgroundColor: themeClasses.select.bg,
+                                        borderColor: themeClasses.select.border,
+                                        color: themeClasses.select.text,
                                         borderRadius: '8px',
-                                        boxShadow: theme === 'dark' ? '0 2px 4px rgba(255, 255, 255, 0.1)' : theme === 'blue' ? '0 2px 4px rgba(30, 58, 138, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                        boxShadow: themeClasses.select.shadow,
                                     }),
                                     option: (baseStyles, state) => ({
                                         ...baseStyles,
                                         backgroundColor: state.isSelected
-                                            ? (theme === 'dark' ? '#4a5568' : theme === 'blue' ? '#2563eb' : '#3182ce')
+                                            ? themeClasses.select.option.selected
                                             : state.isFocused
-                                                ? (theme === 'dark' ? 'black' : theme === 'blue' ? '#1e3a8a' : 'white')
-                                                : (theme === 'dark' ? '#2d3748' : theme === 'blue' ? '#1e40af' : '#edf2f7'),
-                                        color: state.isSelected ? '#ffffff' : (theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000'),
+                                                ? themeClasses.select.option.focused
+                                                : themeClasses.select.option.default,
+                                        color: state.isSelected ? '#ffffff' : themeClasses.select.text,
                                         cursor: 'pointer',
                                     }),
                                     singleValue: (baseStyles) => ({
                                         ...baseStyles,
-                                        color: theme === 'dark' || theme === 'blue' ? '#ffffff' : '#000000',
+                                        color: themeClasses.select.text,
                                     }),
                                 }}
                                 classNamePrefix="react-select"
@@ -199,7 +254,7 @@ function Register() {
                 <div className="col-span-2">
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2"
+                        className={`w-full ${themeClasses.button} font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2`}
                     >
                         <span>Create account</span>
                         <ArrowRight className="w-5 h-5" />

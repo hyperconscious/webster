@@ -3,8 +3,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import AuthService from '../../services/AuthService';
 import { notifyDismiss, notifyError, notifyLoading, notifySuccess } from '../../utils/notification';
 import axios from 'axios';
+import type { Theme } from '../../types';
 
-const EmailVerificationPage: React.FC = () => {
+interface EmailVerificationProps {
+    theme: Theme;
+}
+
+const EmailVerificationPage: React.FC<EmailVerificationProps> = ({ theme }) => {
     const [error, setError] = React.useState<string | null>(null);
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -39,12 +44,34 @@ const EmailVerificationPage: React.FC = () => {
         verifyEmail();
     }, [searchParams, navigate]);
 
+    const getThemeClasses = () => {
+        switch (theme) {
+            case 'light':
+                return {
+                    bg: 'bg-gray-50',
+                    text: 'text-gray-900'
+                };
+            case 'blue':
+                return {
+                    bg: 'bg-blue-950',
+                    text: 'text-white'
+                };
+            default:
+                return {
+                    bg: 'bg-gray-900',
+                    text: 'text-white'
+                };
+        }
+    };
+
+    const themeClasses = getThemeClasses();
+
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
+        <div className={`flex flex-col items-center justify-center h-screen ${themeClasses.bg}`}>
             {error ?
-                <p className='mb-16'>{error}</p>
+                <p className={`mb-16 ${themeClasses.text}`}>{error}</p>
                 :
-                <p className='mb-16'>Please wait while we verify your email.</p>
+                <p className={`mb-16 ${themeClasses.text}`}>Please wait while we verify your email.</p>
             }
             <img
                 src="https://i.gifer.com/7VE.gif"

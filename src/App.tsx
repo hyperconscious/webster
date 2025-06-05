@@ -30,9 +30,9 @@ function App() {
                         <Route path="/projects/:slug" element={<Editor theme={theme} setTheme={setTheme}/>}/>
                         <Route path="/editor" element={<Editor theme={theme} setTheme={setTheme}/>}/>
                         <Route path="/profile" element={<Profile theme={theme}/>}/>
-                        <Route path="/auth" element={<Authentcation/>}/>
-                        <Route path="/auth/verify-email" element={<EmailVerificationPage/>}/>
-                        <Route path="/auth/reset-password" element={<PasswordResetPage/>}/>
+                        <Route path="/auth" element={<Authentcation theme={theme}/>}/>
+                        <Route path="/auth/verify-email" element={<EmailVerificationPage theme={theme}/>}/>
+                        <Route path="/auth/reset-password" element={<PasswordResetPage theme={theme}/>}/>
                         <Route path="*" element={<NotFound theme={theme}/>}/>
                     </Routes>
                     <Toaster/>
