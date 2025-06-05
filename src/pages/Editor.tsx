@@ -149,6 +149,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
         setFontFamily,
         setFontAlign,
         setFontHighlightColor,
+        setFontHighlightOpacity,
         selectActive,
         selectionRef,
         selectActiveLayer,
@@ -665,6 +666,26 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                         <option value="right">Right</option>
                     </select>
                 </div>
+                <div>
+                    <label className="text-sm mb-1 block">Text Highlight Color</label>
+                    <ColorPicker
+                        currentColor={settings.fontHighlightColor}
+                        onColorChange={setFontHighlightColor}
+                        theme={theme}
+                    />
+                </div>
+                <div>
+                    <label className="text-sm mb-1 block">Text Highlight Opacity</label>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={settings.fontHighlightOpacity}
+                        onChange={(e) => setFontHighlightOpacity(Number(e.target.value))}
+                        className="w-full"
+                    />
+                    <div className="text-sm mt-1">{settings.fontHighlightOpacity}%</div>
+                </div>
             </div>
         );
     }
@@ -835,6 +856,26 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                             <option value="center">Center</option>
                             <option value="right">Right</option>
                         </select>
+                    </div>
+                    <div>
+                        <label className="text-sm mb-1 block">Text Highlight Color</label>
+                        <ColorPicker
+                            currentColor={settings.fontHighlightColor}
+                            onColorChange={setFontHighlightColor}
+                            theme={theme}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm mb-1 block">Text Highlight Opacity</label>
+                        <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={settings.fontHighlightOpacity}
+                            onChange={(e) => setFontHighlightOpacity(Number(e.target.value))}
+                            className="w-full"
+                        />
+                        <div className="text-sm mt-1">{settings.fontHighlightOpacity}%</div>
                     </div>
                 </div>
             );

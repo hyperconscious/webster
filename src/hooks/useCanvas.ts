@@ -49,14 +49,15 @@ export const useCanvas = ({
         fontColor: '#000000',
         fontFamily: 'Arial',
         fontAlign: 'left',
-        fontHighlightColor: '#ffffff'
+        fontHighlightColor: '#ffffff',
+        fontHighlightOpacity: 0
     });
     const [currentLine, setCurrentLine] = useState<Konva.Line>();
     const lastPointRef = useRef<Point | null>(null);
     const shapeRef = useRef<Konva.Shape | null>(null);
     const selectionRef = useRef<Konva.Rect | null>(null);
     const transformerRef = useRef<Konva.Transformer | null>(null);
-    const textRef = useRef<Konva.Text | null>(null);
+    const textRef = useRef<Konva.Label | null>(null);
     const [selectActive, setSelectActive] = useState<nodeType | null>(null);
 
     const canvasRef = useRef<Konva.Stage>(null);
@@ -343,16 +344,19 @@ export const useCanvas = ({
         }
     }, [shapeRef, createHistorySnapshot, layers]);
 
-    const selectActiveFunc = ((node: Konva.Shape | Konva.Image | Konva.Text) => {
-        if (node instanceof Konva.Text) {
-            const fill = node.fill();
+    const selectActiveFunc = ((node: Konva.Shape | Konva.Image | Konva.Label) => {
+        if (node instanceof Konva.Label) {
+            const text = node.getText();
+            const fill = text.fill();
             if (typeof fill === 'string') {
                 setFontColorVal(fill);
             }
-            setFontSizeVal(node.fontSize());
-            setFontStyleVal(node.fontStyle() as FontStyle);
-            setFontFamilyVal(node.fontFamily());
-            setFontAlignVal(node.align() as 'left' | 'center' | 'right');
+            setFontSizeVal(text.fontSize());
+            setFontStyleVal(text.fontStyle() as FontStyle);
+            setFontFamilyVal(text.fontFamily());
+            setFontAlignVal(text.align() as 'left' | 'center' | 'right');
+            setFontHighlightColorVal(node.getTag().fill() as string);
+            setFontHighlightOpacityVal(node.getTag().opacity() * 100);
             setSelectActive('text');
         } else {
             setBlurVal(node.blurRadius());
@@ -424,23 +428,24 @@ export const useCanvas = ({
         const ctrlPressed = e.evt.ctrlKey || e.evt.metaKey;
         const isSelected = activeLayerIndexes.includes(indexLayer);
 
+
         setAttrsTransformer(node as Konva.Shape | Konva.Image | Konva.Text);
-        if (transformerRef.current?.nodes()[0] instanceof Konva.Text || node instanceof Konva.Text) {
+        if (transformerRef.current?.nodes()[0] instanceof Konva.Label || node instanceof Konva.Label) {
             setLayerIndexes([indexLayer]);
             transformerRef.current?.nodes([node]);
             node.draggable(true);
-            selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Text);
+            selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Label);
         } else {
             if (!shiftPressed && !isSelected) {
                 setLayerIndexes([indexLayer]);
                 transformerRef.current?.nodes([node]);
                 node.draggable(true);
-                selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Text);
+                selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Label);
             } else if (ctrlPressed && isSelected) {
                 setLayerIndexes([indexLayer]);
                 transformerRef.current?.nodes([node]);
                 node.draggable(true);
-                selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Text);
+                selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Label);
             } else if (shiftPressed && isSelected) {
                 const activeIndexes = activeLayerIndexes.filter(index => indexLayer !== index);
                 setLayerIndexes(activeIndexes);
@@ -514,9 +519,12 @@ export const useCanvas = ({
 
     const createText = useCallback((point: Point) => {
         addLayerForObject(`Text ${layers.length}`, (newLayer) => {
-            const text = new Konva.Text({
+            if (textRef.current) return;
+            const label = new Konva.Label({
                 x: point.x,
-                y: point.y,
+                y: point.y
+            });
+            const text = new Konva.Text({
                 text: 'Double click to edit',
                 fontSize: settings.fontSize,
                 fontFamily: 'Arial',
@@ -525,64 +533,42 @@ export const useCanvas = ({
                 width: 200,
                 name: 'text'
             });
-
-            textRef.current = text;
-            newLayer.canvas.add(text);
-
-            // Select the new text immediately
-            const layerIndex = layers.findIndex(l => l.id === newLayer.id);
-            if (layerIndex !== -1) {
-                setLayerIndexes([layerIndex]);
-                transformerRef.current?.nodes([text]);
-                text.draggable(true);
-                selectActiveFunc(text);
-            }
-
-            // Start editing immediately
-            const stage = text.getStage();
-            if (!stage) return;
-
-            text.visible(false);
-            transformerRef.current?.visible(false);
-
-            const textarea = document.createElement('textarea');
-            textarea.value = '';
-            textarea.style.position = 'absolute';
-
-            const rect = text.getClientRect({ relativeTo: stage });
-            const containerRect = stage.container().getBoundingClientRect();
-
-            textarea.style.left = `${containerRect.left + (rect.x * scale)}px`;
-            textarea.style.top = `${containerRect.top + (rect.y * scale)}px`;
-            textarea.style.width = `${Math.max(200, rect.width) * scale}px`;
-            textarea.style.height = `${rect.height * scale}px`;
-            textarea.style.border = 'none';
-            textarea.style.padding = '0px';
-            textarea.style.margin = '0px';
-            textarea.style.overflow = 'hidden';
-            textarea.style.background = 'none';
-            textarea.style.outline = 'none';
-            textarea.style.resize = 'none';
-            textarea.style.fontFamily = text.fontFamily();
-            textarea.style.transformOrigin = 'left top';
-            textarea.style.textAlign = text.align();
-            textarea.style.color = text.fill().toString();
-            textarea.style.fontSize = `${text.fontSize() * scale}px`;
-            textarea.style.fontStyle = text.fontStyle();
-            textarea.style.lineHeight = text.lineHeight().toString();
-
-            document.body.appendChild(textarea);
-            textarea.focus();
-
-            textarea.addEventListener('blur', () => {
-                text.text(textarea.value);
-                document.body.removeChild(textarea);
-                text.visible(true);
-                transformerRef.current?.visible(true);
-                createHistorySnapshot(layers);
+            const highlight = new Konva.Tag({
+                fill: settings.fontHighlightColor,
+                opacity: settings.fontHighlightOpacity
             });
+            label.add(highlight);
+            label.add(text);
+            label.name('text');
+            textRef.current = label;
+
+            label.on('transform', function () {
+                label.getText().setAttrs({
+                    width: label.getText().width() * label.scaleX(),
+                });
+                label.setAttrs({
+                    scaleX: 1
+                });
+            });
+            newLayer.canvas.add(label);
         });
     }, [addLayerForObject, settings, createHistorySnapshot]);
+
+    const hexToRgb = (hex: string, opacity: number): { r: number; g: number; b: number, a: number } | null => {
+        hex = hex.replace(/^#/, '');
+        if (hex.length === 3) {
+            hex = hex.split('').map(x => x + x).join('');
+        }
+
+        if (hex.length !== 6) return null;
+        const num = parseInt(hex, 16);
+        return {
+            r: (num >> 16) & 255,
+            g: (num >> 8) & 255,
+            b: num & 255,
+            a: Math.max(0, Math.min(1, opacity))
+        };
+    };
 
     const textEdit = useCallback((point: Point, e: Konva.KonvaEventObject<MouseEvent>) => {
         const hitArea = { x: point.x, y: point.y, width: 1, height: 1 };
@@ -594,16 +580,17 @@ export const useCanvas = ({
                 return node ? { layer, index, node } : null;
             }).find(obj => obj !== null);
         if (!firstValid) return;
-        const text = firstValid.node as Konva.Text;
-        const stage = text.getStage();
+        const label = firstValid.node as Konva.Label;
+        const text = label.getText();
+        const stage = label.getStage();
         if (!stage) return { x: 0, y: 0, width: 0, height: 0 };
-        const rect = text.getClientRect({ relativeTo: stage });
+        const rect = label.getClientRect({ relativeTo: stage });
         const containerRect = stage.container().getBoundingClientRect();
         const screenX = containerRect.left + (rect.x * scale);
         const screenY = containerRect.top + (rect.y * scale);
         const screenWidth = rect.width * scale;
         const screenHeight = rect.height * scale;
-        text.visible(false);
+        label.visible(false);
         transformerRef.current?.visible(false);
         const textarea = document.createElement('textarea');
         textarea.value = text.text();
@@ -627,6 +614,9 @@ export const useCanvas = ({
         textarea.style.fontStyle = text.fontStyle();
         textarea.style.lineHeight = text.lineHeight().toString();
         textarea.style.whiteSpace = 'pre-wrap';
+        const rgbColor = hexToRgb(label.getTag().fill().toString(), label.getTag().opacity());
+        const rgbaColor = rgbColor ? `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${rgbColor.a})` : 'transparent';
+        textarea.style.backgroundColor = rgbaColor;
         const rotation = text.rotation();
         let transform = '';
         if (rotation) {
@@ -639,7 +629,7 @@ export const useCanvas = ({
         textarea.addEventListener('blur', () => {
             text.text(textarea.value);
             document.body.removeChild(textarea);
-            text.visible(true);
+            label.visible(true);
             transformerRef.current?.visible(true);
             createHistorySnapshot(layers);
         });
@@ -706,7 +696,7 @@ export const useCanvas = ({
         const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
         setFontSizeVal(fontSize);
         texts.forEach((text) => {
-            (text as Konva.Text).fontSize(fontSize);
+            (text as Konva.Label).getText().fontSize(fontSize);
         });
     }, [activeLayers]);
 
@@ -714,7 +704,7 @@ export const useCanvas = ({
         const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
         setFontStyleVal(fontStyle);
         texts.forEach((text) => {
-            (text as Konva.Text).fontStyle(fontStyle);
+            (text as Konva.Label).getText().fontStyle(fontStyle);
         });
     }, [activeLayers]);
 
@@ -722,7 +712,7 @@ export const useCanvas = ({
         const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
         setFontColorVal(fontColor);
         texts.forEach((text) => {
-            (text as Konva.Text).fill(fontColor);
+            (text as Konva.Label).getText().fill(fontColor);
         });
     }, [activeLayers]);
 
@@ -730,7 +720,7 @@ export const useCanvas = ({
         const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
         setFontFamilyVal(fontFamily);
         texts.forEach((text) => {
-            (text as Konva.Text).fontFamily(fontFamily);
+            (text as Konva.Label).getText().fontFamily(fontFamily);
         });
     }, [activeLayers]);
 
@@ -738,7 +728,7 @@ export const useCanvas = ({
         const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
         setFontHighlightColorVal(fontHighlightColor);
         texts.forEach((text) => {
-            (text as Konva.Text).fill(fontHighlightColor);
+            (text as Konva.Label).getTag().fill(fontHighlightColor);
         });
     }, [activeLayers]);
 
@@ -746,9 +736,21 @@ export const useCanvas = ({
         const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
         setFontAlignVal(fontAlign);
         texts.forEach((text) => {
-            (text as Konva.Text).align(fontAlign);
+            (text as Konva.Label).getText().align(fontAlign);
         });
     }, [activeLayers]);
+
+    const setFontHighlightOpacity = useCallback((fontHighlightOpacity: number) => {
+        const texts = activeLayers.filter(layer => layer.type === "object").map(layer => layer.canvas.findOne('.text')).flat();
+        setFontHighlightOpacityVal(fontHighlightOpacity);
+        texts.forEach((text) => {
+            (text as Konva.Label).getTag().opacity(fontHighlightOpacity / 100);
+        });
+    }, [activeLayers]);
+
+    const setFontHighlightOpacityVal = useCallback((fontHighlightOpacity: number) => {
+        setSettings(prev => ({ ...prev, fontHighlightOpacity }));
+    }, []);
 
     const setFontHighlightColorVal = useCallback((fontHighlightColor: string) => {
         setSettings(prev => ({ ...prev, fontHighlightColor }));
@@ -892,7 +894,7 @@ export const useCanvas = ({
             setAttrsTransformer(node as Konva.Shape | Konva.Image | Konva.Text);
             transformerRef.current?.nodes([node]);
             node.draggable(true);
-            selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Text);
+            selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Label);
             if (settings.tool !== 'select') {
                 setTool('select');
             }
@@ -935,6 +937,7 @@ export const useCanvas = ({
         setFontFamily,
         setFontHighlightColor,
         setFontAlign,
+        setFontHighlightOpacity,
         selectActive,
         selectionRef,
         selectActiveLayer,

@@ -26,6 +26,7 @@ export interface Settings {
     fontFamily: string;
     fontAlign: 'left' | 'center' | 'right';
     fontHighlightColor: string;
+    fontHighlightOpacity: number;
 }
 
 export type nodeType =
