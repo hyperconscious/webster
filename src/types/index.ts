@@ -6,17 +6,33 @@ export interface Point {
     y: number;
 }
 
-export interface DrawingSettings {
+export interface Settings {
+    tool: Tool;
     color: string;
     lineWidth: number;
-    tool: Tool;
     pattern?: BrushPattern;
-    tilt?: number;
-    pressure?: number;
-    angle?: number;
-    point: Point;
     opacity: number;
+    shapeTool?: ShapeTool;
+    size?: [number, number];
+    point: Point;
+    colorStoke: string;
+    widthStroke: number;
+    blur: number;
+    contrast: number;
+    brightness: number;
+    fontSize: number;
+    fontStyle: FontStyle;
+    fontColor: string;
 }
+
+export type nodeType =
+    | 'text'
+    | 'object'
+
+export type FontStyle =
+    | 'normal'
+    | 'italic'
+    | 'bold'
 
 export type BrushPattern =
     | 'normal'
@@ -29,6 +45,7 @@ export type BrushPattern =
     | 'textured';
 
 export type Tool =
+    | 'select'
     | 'brush'
     | 'pencil'
     | 'highlighter'
@@ -45,9 +62,12 @@ export type ShapeTool =
     | 'circle'
     | 'triangle'
     | 'polygon'
-    | 'star';
+    | 'wedge';
+
+export type LayerType = 'object' | 'draw';
 
 export interface Layer {
+    type: LayerType;
     id: string;
     name: string;
     visible: boolean;
