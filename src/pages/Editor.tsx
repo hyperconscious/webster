@@ -14,6 +14,7 @@ import { notifyError, notifySuccess } from '../utils/notification';
 import Konva from 'konva';
 import HistoryModal from '../components/HistoryModal';
 import { jsPDF } from 'jspdf';
+import { set } from 'zod';
 
 interface IHistoryItem {
     id: string;
@@ -95,7 +96,6 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
     const {
         layers,
         activeLayerIndexes,
-        setActiveLayerIndexes,
         addLayer,
         addLayerForObject,
         removeLayer,
@@ -969,6 +969,7 @@ const Editor: React.FC<EditorPageProps> = ({ theme, setTheme }) => {
                                 offset={offset}
                                 setOffset={setOffset}
                                 screenToCanvas={screenToCanvas}
+                                addHistoryItem={addHistoryItem}
                             />
                         </div>
 

@@ -5,7 +5,6 @@ export interface RegisterData {
   email: string;
   password: string;
   passwordConfirmation: string;
-  countryCode: string;
   full_name: string;
 }
 
@@ -32,7 +31,7 @@ export interface UpdateUserData {
   email?: string;
   verified?: boolean;
   avatar?: string;
-  role?: string;
+  role?: 'admin' | 'user';
 }
 
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
@@ -61,7 +60,6 @@ export const registerSchema = z
     email: z
       .string()
       .email('Email must be a valid email address.'),
-    countryCode: z.string(),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     path: ['passwordConfirmation'],
@@ -123,7 +121,6 @@ export const updateUserDto = z
       .email('Email must be a valid email address.')
       .optional(),
     verified: z.boolean().optional().default(false),
-    role: z.enum(['admin', 'user']).optional().default('user'),
   })
   .refine(
     (data) =>

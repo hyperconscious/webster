@@ -211,21 +211,19 @@ export const useCanvas = ({
 
     const startCreateShape = useCallback((shapeType: ShapeTool, point: Point) => {
         if (shapeRef.current !== null || !activeLayers || shapeType === undefined) return;
-        if (shapeType === 'rectangle') {
-            setToolShape('circle');
-        } else {
-            setToolShape('rectangle');
-        }
-        setToolShape(shapeType);
-        let shape;
+
+        let shape: Konva.Shape | null = null;
+
         addLayerForObject(`Shape ${shapeType} ${layers.length}`, (newLayer) => {
             if (shapeRef.current) return;
+
             switch (shapeType) {
                 case 'line':
                     shape = new Konva.Line({
-                        points: [point.x, point.y],
+                        points: [point.x, point.y, point.x, point.y],
                         stroke: settings.color,
-                        strokeWidth: settings.lineWidth
+                        strokeWidth: settings.lineWidth,
+                        name: 'shape'
                     });
                     break;
                 case 'circle':
@@ -233,16 +231,24 @@ export const useCanvas = ({
                         x: point.x,
                         y: point.y,
                         opacity: settings.opacity / 100,
-                        radius: 0,
-                        fill: settings.color
+                        radius: 1,
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'rectangle':
                     shape = new Konva.Rect({
                         x: point.x,
                         y: point.y,
+                        width: 1,
+                        height: 1,
                         opacity: settings.opacity / 100,
-                        fill: settings.color
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'triangle':
@@ -251,8 +257,11 @@ export const useCanvas = ({
                         y: point.y,
                         opacity: settings.opacity / 100,
                         sides: 3,
-                        radius: 0,
-                        fill: settings.color
+                        radius: 1,
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'polygon':
@@ -261,8 +270,11 @@ export const useCanvas = ({
                         y: point.y,
                         opacity: settings.opacity / 100,
                         sides: 5,
-                        radius: 0,
-                        fill: settings.color
+                        radius: 1,
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
                 case 'wedge':
@@ -270,22 +282,33 @@ export const useCanvas = ({
                         x: point.x,
                         y: point.y,
                         opacity: settings.opacity / 100,
-                        radius: 0,
-                        angle: 0,
+                        radius: 1,
+                        angle: 5,
                         rotation: 0,
-                        fill: settings.color
+                        fill: settings.color,
+                        stroke: settings.colorStoke,
+                        strokeWidth: settings.widthStroke,
+                        name: 'shape'
                     });
                     break;
             }
-            if (!shape) return;
-            shape.name('shape');
-            shape.fillAfterStrokeEnabled(true);
-            newLayer.canvas.add(shape);
 
+            if (!shape) return;
+
+            newLayer.canvas.add(shape);
             shapeRef.current = shape;
             lastPointRef.current = point;
+
+            // Select the new shape immediately
+            const layerIndex = layers.findIndex(l => l.id === newLayer.id);
+            if (layerIndex !== -1) {
+                setLayerIndexes([layerIndex]);
+                transformerRef.current?.nodes([shape]);
+                shape.draggable(true);
+                selectActiveFunc(shape);
+            }
         });
-    }, [lastPointRef, settings]);
+    }, [activeLayers, addLayerForObject, layers, settings]);
 
     const createShape = useCallback((point: Point) => {
         if (!shapeRef.current || !lastPointRef.current) return;
@@ -350,17 +373,29 @@ export const useCanvas = ({
             }
             setSelectActive('object');
         }
-
     });
 
-    const setAttrsTransformer = useCallback((node: Konva.Shape | Konva.Image | Konva.Label) => {
-        if (node instanceof Konva.Label) {
-            transformerRef.current?.setAttrs({
-                enabledAnchors: ['middle-left', 'middle-right']
+    const setAttrsTransformer = useCallback((node: Konva.Shape | Konva.Image | Konva.Text) => {
+        if (!transformerRef.current) return;
+
+        if (node instanceof Konva.Text) {
+            transformerRef.current.setAttrs({
+                enabledAnchors: ['middle-left', 'middle-right'],
+                boundBoxFunc: (_oldBox: { x: number; y: number; width: number; height: number; }, newBox: { x: number; y: number; width: number; height: number; }) => {
+                    // limit text width scaling
+                    newBox.width = Math.max(30, newBox.width);
+                    return newBox;
+                }
             });
         } else {
-            transformerRef.current?.setAttrs({
-                enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right']
+            transformerRef.current.setAttrs({
+                enabledAnchors: [
+                    'top-left', 'top-right',
+                    'bottom-left', 'bottom-right',
+                    'middle-left', 'middle-right',
+                    'top-center', 'bottom-center'
+                ],
+                rotateEnabled: true
             });
         }
     }, [transformerRef]);
@@ -394,7 +429,7 @@ export const useCanvas = ({
         const isSelected = activeLayerIndexes.includes(indexLayer);
 
 
-        setAttrsTransformer(node as Konva.Shape | Konva.Image | Konva.Label);
+        setAttrsTransformer(node as Konva.Shape | Konva.Image | Konva.Text);
         if (transformerRef.current?.nodes()[0] instanceof Konva.Label || node instanceof Konva.Label) {
             setLayerIndexes([indexLayer]);
             transformerRef.current?.nodes([node]);
@@ -466,6 +501,15 @@ export const useCanvas = ({
                 if (!konvaImage) return;
                 konvaImage.name('img');
                 newLayer.canvas.add(konvaImage);
+
+                // Select the new image immediately
+                const layerIndex = layers.findIndex(l => l.id === newLayer.id);
+                if (layerIndex !== -1) {
+                    setLayerIndexes([layerIndex]);
+                    transformerRef.current?.nodes([konvaImage]);
+                    konvaImage.draggable(true);
+                    selectActiveFunc(konvaImage);
+                }
             });
             URL.revokeObjectURL(urlImage);
             createHistorySnapshot(layers);
@@ -474,7 +518,6 @@ export const useCanvas = ({
     }, [activeLayers]);
 
     const createText = useCallback((point: Point) => {
-        textRef.current = null;
         addLayerForObject(`Text ${layers.length}`, (newLayer) => {
             if (textRef.current) return;
             const label = new Konva.Label({
@@ -486,7 +529,9 @@ export const useCanvas = ({
                 fontSize: settings.fontSize,
                 fontFamily: 'Arial',
                 fill: settings.fontColor,
-                fontStyle: settings.fontStyle
+                fontStyle: settings.fontStyle,
+                width: 200,
+                name: 'text'
             });
             const highlight = new Konva.Tag({
                 fill: settings.fontHighlightColor,
@@ -507,7 +552,6 @@ export const useCanvas = ({
             });
             newLayer.canvas.add(label);
         });
-        createHistorySnapshot(layers);
     }, [addLayerForObject, settings, createHistorySnapshot]);
 
     const hexToRgb = (hex: string, opacity: number): { r: number; g: number; b: number, a: number } | null => {
@@ -850,7 +894,7 @@ export const useCanvas = ({
             setLayerIndexes([index]);
             const node = layers[index].canvas.findOne((node: Konva.Node) => (node.hasName('shape') || node.hasName('img') || node.hasName('text')));
             if (!node) return;
-            setAttrsTransformer(node as Konva.Shape | Konva.Image | Konva.Label);
+            setAttrsTransformer(node as Konva.Shape | Konva.Image | Konva.Text);
             transformerRef.current?.nodes([node]);
             node.draggable(true);
             selectActiveFunc(node as Konva.Shape | Konva.Image | Konva.Label);
