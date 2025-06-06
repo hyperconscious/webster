@@ -511,20 +511,20 @@ export const useCanvas = ({
     }, [addLayerForObject, settings, createHistorySnapshot]);
 
     const hexToRgb = (hex: string, opacity: number): { r: number; g: number; b: number, a: number } | null => {
-    hex = hex.replace(/^#/, '');
-    if (hex.length === 3) {
-        hex = hex.split('').map(x => x + x).join('');
-    }
+        hex = hex.replace(/^#/, '');
+        if (hex.length === 3) {
+            hex = hex.split('').map(x => x + x).join('');
+        }
 
-    if (hex.length !== 6) return null;
-    const num = parseInt(hex, 16);
-    return {
-        r: (num >> 16) & 255,
-        g: (num >> 8) & 255,
-        b: num & 255,
-        a: Math.max(0, Math.min(1, opacity))
+        if (hex.length !== 6) return null;
+        const num = parseInt(hex, 16);
+        return {
+            r: (num >> 16) & 255,
+            g: (num >> 8) & 255,
+            b: num & 255,
+            a: Math.max(0, Math.min(1, opacity))
+        };
     };
-};
 
     const textEdit = useCallback((point: Point, e: Konva.KonvaEventObject<MouseEvent>) => {
         const hitArea = { x: point.x, y: point.y, width: 1, height: 1 };
@@ -553,12 +553,15 @@ export const useCanvas = ({
         textarea.style.position = 'absolute';
         textarea.style.left = `${screenX}px`;
         textarea.style.top = `${screenY}px`;
-        textarea.style.width = `${screenWidth}px`;
         textarea.style.height = `${screenHeight}px`;
+        textarea.style.width = `${screenWidth}px`;
+        textarea.addEventListener('input', () => {
+            textarea.style.height = textarea.scrollHeight + 'px';
+            textarea.style.width = textarea.scrollWidth + 'px';
+        });
         textarea.style.border = 'none';
         textarea.style.padding = '0px';
         textarea.style.margin = '0px';
-        textarea.style.overflow = 'hidden';
         textarea.style.background = 'none';
         textarea.style.outline = 'none';
         textarea.style.resize = 'none';
@@ -569,7 +572,7 @@ export const useCanvas = ({
         textarea.style.fontSize = text.fontSize() * scale + 'px';
         textarea.style.fontStyle = text.fontStyle();
         textarea.style.lineHeight = text.lineHeight().toString();
-        textarea.style.whiteSpace = 'pre-wrap';
+        textarea.style.whiteSpace = 'nowrap';
         const rgbColor = hexToRgb(label.getTag().fill().toString(), label.getTag().opacity());
         const rgbaColor = rgbColor ? `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, ${rgbColor.a})` : 'transparent';
         textarea.style.backgroundColor = rgbaColor;
